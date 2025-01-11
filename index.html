@@ -90,6 +90,17 @@
             background: #f8f9fa;
             border-radius: 10px;
         }
+        .mode-switch .btn-group {
+            display: flex;
+            width: 100%;
+        }
+        .mode-switch .btn {
+            flex: 1;
+            padding: 0.8rem;
+            font-size: 1rem;
+            border-radius: 8px;
+            margin: 0 4px;
+        }
         .content-area {
             width: 100%;
             min-height: 600px;
@@ -103,14 +114,20 @@
             white-space: pre-wrap;
         }
         .edit-tools {
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 1rem;
             margin-bottom: 1rem;
-            flex-wrap: wrap;
         }
         .edit-tools button {
-            flex: 1;
-            min-width: 120px;
+            width: 100%;
+            height: 42px;
+            font-size: 1rem;
+            border-radius: 8px;
+            padding: 0 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .export-tools {
             margin-top: 1rem;
@@ -192,6 +209,16 @@
             display: block;
             min-width: 200px;
             padding: 0.8rem 2rem;
+        }
+        .suggestion-tags button {
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .input-group .btn {
+            border-radius: 8px;
+            padding: 0.5rem 1.5rem;
         }
     </style>
 </head>
