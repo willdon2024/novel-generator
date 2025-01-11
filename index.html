@@ -246,13 +246,13 @@
                             <div class="api-key-group">
                                 <input type="password" class="form-control" id="apiKey" required>
                                 <button type="button" class="btn btn-primary" id="confirmApiKey" style="min-width: 80px; line-height: 1;">确认</button>
-                            </div>
+                </div>
                             <small class="text-muted">请输入你的 Moonshot API Key</small>
-                        </div>
+            </div>
                         <div class="mb-3">
                             <label for="title" class="form-label">小说标题</label>
                             <input type="text" class="form-control" id="title" required placeholder="请输入小说标题">
-                        </div>
+        </div>
                         <div class="mb-3">
                             <label for="novelType" class="form-label">小说类型</label>
                             <select class="form-select" id="novelType" required>
@@ -297,16 +297,16 @@
                     </div>
                 </form>
             </div>
-        </div>
-        
-        <div class="card">
-            <div class="card-body">
+            </div>
+            
+                <div class="card">
+                    <div class="card-body">
                 <h5 class="card-title">内容编辑</h5>
-                
+                            
                 <div class="progress">
                     <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
-                </div>
-                
+                        </div>
+                        
                 <div class="mode-switch">
                     <div class="btn-group w-100">
                         <input type="radio" class="btn-check" name="mode" id="outlineMode" checked>
@@ -314,22 +314,22 @@
                         
                         <input type="radio" class="btn-check" name="mode" id="contentMode">
                         <label class="btn btn-outline-primary" for="contentMode">章节内容模式</label>
-                    </div>
-                </div>
-                
+                            </div>
+                        </div>
+
                 <div class="edit-tools">
                     <button class="btn btn-primary" id="saveOutline" disabled>保存大纲修改</button>
                     <button class="btn btn-secondary" id="resetOutline">重置修改</button>
                     <button class="btn btn-success" id="continueGenerate" style="display: none;">继续生成</button>
                     <button class="btn btn-success" id="generateChapter" style="display: none;">生成章节内容</button>
-                </div>
+                                </div>
                 
                 <div class="chapter-select" style="display: none; margin-bottom: 1rem;">
                     <label for="chapterSelect" class="form-label">选择章节</label>
                     <select class="form-select" id="chapterSelect">
                         <option value="" disabled selected>请选择要生成的章节</option>
                     </select>
-                </div>
+                            </div>
                 
                 <textarea class="content-area" id="contentArea" placeholder="这里将显示生成的内容..."></textarea>
                 
@@ -338,7 +338,7 @@
                     <div class="input-group mb-2">
                         <input type="text" class="form-control" id="modificationInput" placeholder="输入修改建议，例如：'增加更多人物冲突'、'加强故事背景'">
                         <button class="btn btn-primary" onclick="applyModification()">应用修改</button>
-                    </div>
+                        </div>
                     <div class="suggestion-tags">
                         <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="selectSuggestion(this)">增加人物冲突</button>
                         <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="selectSuggestion(this)">加强故事背景</button>
@@ -643,7 +643,7 @@
                     ]
                 }]
             });
-            
+
             const blob = await docx.Packer.toBlob(doc);
             saveAs(blob, `${document.getElementById('title').value || '小说'}.docx`);
         }
@@ -654,7 +654,7 @@
                 alert('没有可导出的内容！');
                 return;
             }
-            
+
             const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
             saveAs(blob, `${document.getElementById('title').value || '小说'}.txt`);
         }
@@ -665,7 +665,7 @@
                 alert('没有可复制的内容！');
                 return;
             }
-            
+
             navigator.clipboard.writeText(content)
                 .then(() => alert('内容已复制到剪贴板！'))
                 .catch(err => alert('复制失败：' + err));
