@@ -368,7 +368,7 @@
         let isOutlineModified = false;
         let currentChapter = 0;
         let isGeneratingOutline = false;
-        let outlineStages = ['背景设定', '人物介绍', '第一章到第五章', '第六章到第十章', '第十一章到第十五章', '第十六章到第二十章', '结局章节'];
+        let outlineStages = ['整体规划', '详细大纲'];
         let currentStage = 0;
 
         function saveApiKey(apiKey) {
@@ -547,42 +547,41 @@
             const novelType = document.getElementById('novelType').value;
             const currentContent = document.getElementById('contentArea').value;
             
-            let prompt;
-            if (isGeneratingOutline) {
-                prompt = `基于已有的内容继续生成大纲的${outlineStages[currentStage]}部分：\n\n${currentContent}\n\n请继续完善大纲，确保：\n1. 与已有内容保持连贯\n2. 符合${novelType}小说的特点\n3. 每章节标题后附带100-200字的内容梗概\n4. 每个阶段生成5章，保持情节递进\n5. 结局章节包含完整的结局安排\n6. 注重情节发展的合理性\n7. 保持人物性格的一致性\n8. 适当安排环境描写和心理描写的篇幅`;
-                currentStage++;
-            } else {
-                prompt = `基于大纲继续生成第${currentChapter + 1}章的内容：\n\n${currentContent}\n\n要求：\n1. 与前文保持连贯\n2. 细致描写场景和人物\n3. 控制字数在4000-6000字之间\n4. 注重情节发展的合理性\n5. 保持人物性格的一致性\n6. 适当运用环境描写和心理描写\n7. 符合${novelType}小说的特点`;
-                currentChapter++;
-            }
-            
             try {
-                const response = await callMoonshotAPI(apiKey, {
-                    messages: [
-                        {
-                            role: "system",
-                            content: isGeneratingOutline ? 
-                                `你是一个专业的${novelType}小说大纲策划师。你需要继续完善已有的大纲内容。` :
-                                `你是一个专业的小说写作助手。你需要基于大纲继续生成后续章节的具体内容。`
-                        },
-                        {
-                            role: "user",
-                            content: prompt
-                        }
-                    ]
-                });
-
-                document.getElementById('contentArea').value = currentContent + '\n\n' + response.choices[0].message.content;
-                
-                // 检查是否需要继续显示"继续生成"按钮
-                if (isGeneratingOutline && currentStage < outlineStages.length) {
-                    this.disabled = false;
-                } else if (!isGeneratingOutline && currentChapter < 15) {
-                    this.disabled = false;
-                } else {
-                    this.style.display = 'none';
-                    if (isGeneratingOutline) {
+                if (isGeneratingOutline) {
+                    if (currentStage === outlineStages.length) {
+                        // 大纲生成完成
+                        this.style.display = 'none';
                         originalOutline = document.getElementById('contentArea').value;
+                        alert('大纲生成完成！您可以开始生成具体章节内容了。');
+                        return;
+                    }
+
+                    const response = await callMoonshotAPI(apiKey, {
+                        messages: [
+                            {
+                                role: "system",
+                                content: `你是一个专业的${novelType}小说大纲策划师。${
+                                    currentStage === 1 ? '现在需要基于已有的整体规划，详细展开每个章节的具体内容。' : 
+                                    '首先需要规划整体故事架构和发展脉络。'
+                                }`
+                            },
+                            {
+                                role: "user",
+                                content: currentStage === 1 ? 
+                                    `${prompt}\n\n已有的整体规划：\n${currentContent}` : 
+                                    prompt
+                            }
+                        ]
+                    });
+
+                    document.getElementById('contentArea').value = currentStage === 1 ? 
+                        currentContent + '\n\n详细章节大纲：\n' + response.choices[0].message.content :
+                        response.choices[0].message.content;
+                    
+                    if (currentStage < outlineStages.length) {
+                        this.textContent = currentStage === 1 ? '完成大纲' : '生成详细大纲';
+                        this.disabled = false;
                     }
                 }
             } catch (error) {
