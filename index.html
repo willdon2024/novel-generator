@@ -687,10 +687,21 @@ ${currentContent}
 
         // 添加授权码验证系统
         const validAuthCodes = {
-            'AUTH001-2024': { user: 'user1', activated: null },
-            'AUTH002-2024': { user: 'user2', activated: null },
-            'AUTH003-2024': { user: 'user3', activated: null }
-            // 可以添加更多授权码
+            // 格式说明：
+            // 'AUTH编号-年份': { user: '用户标识', activated: null }
+            
+            // 示例授权码
+            'AUTH001-2024': { user: '张三的授权', activated: null },
+            'AUTH002-2024': { user: '李四的授权', activated: null },
+            'AUTH003-2024': { user: '王五的授权', activated: null },
+            
+            // 自定义授权码格式示例：
+            'NOVEL001-2024': { user: '小说创作者1号', activated: null },
+            'WRITER002-2024': { user: '专业作家2号', activated: null },
+            
+            // 你可以按照这个格式继续添加更多授权码
+            // 'NEW-AUTH-001': { user: '新用户1', activated: null },
+            // 'NEW-AUTH-002': { user: '新用户2', activated: null },
         };
 
         document.getElementById('verifyAuth').addEventListener('click', function() {
