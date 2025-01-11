@@ -180,10 +180,11 @@
             height: 38px;
             width: auto !important;
             padding: 0 1.5rem;
-            display: flex;
+            display: inline-flex !important;
             align-items: center;
             justify-content: center;
             font-size: 0.9rem;
+            margin-top: 0;
         }
         .btn-primary#generateBtn {
             width: auto !important;
@@ -204,7 +205,7 @@
                         <label for="apiKey" class="form-label">Moonshot API Key</label>
                         <div class="api-key-group">
                             <input type="password" class="form-control" id="apiKey" required>
-                            <button type="button" class="btn btn-primary" id="confirmApiKey" style="min-width: 80px;">确认</button>
+                            <button type="button" class="btn btn-primary" id="confirmApiKey" style="min-width: 80px; line-height: 1;">确认</button>
                         </div>
                         <small class="text-muted">请输入你的 Moonshot API Key</small>
                     </div>
