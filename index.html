@@ -178,6 +178,15 @@
         .api-key-group .btn {
             white-space: nowrap;
             height: 42px;
+            width: auto !important;
+            padding: 0.8rem 1.5rem;
+        }
+        .btn-primary#generateBtn {
+            width: auto !important;
+            margin: 0 auto;
+            display: block;
+            min-width: 200px;
+            padding: 0.8rem 2rem;
         }
     </style>
 </head>
@@ -268,7 +277,16 @@
                     <button class="btn btn-success" id="generateChapter" style="display: none;">生成章节内容</button>
                 </div>
                 
-                <div class="outline-modification mb-3" style="background: #f8f9fa; padding: 1rem; border-radius: 10px;">
+                <div class="chapter-select" style="display: none; margin-bottom: 1rem;">
+                    <label for="chapterSelect" class="form-label">选择章节</label>
+                    <select class="form-select" id="chapterSelect">
+                        <option value="" disabled selected>请选择要生成的章节</option>
+                    </select>
+                </div>
+                
+                <textarea class="content-area" id="contentArea" placeholder="这里将显示生成的内容..."></textarea>
+                
+                <div class="outline-modification mb-3" style="background: #f8f9fa; padding: 1rem; border-radius: 10px; margin-top: 1rem;">
                     <h6 class="mb-2">人工干涉</h6>
                     <div class="input-group mb-2">
                         <input type="text" class="form-control" id="modificationInput" placeholder="输入修改建议，例如：'增加更多人物冲突'、'加强故事背景'">
@@ -283,25 +301,10 @@
                     </div>
                 </div>
                 
-                <div class="chapter-select" style="display: none; margin-bottom: 1rem;">
-                    <label for="chapterSelect" class="form-label">选择章节</label>
-                    <select class="form-select" id="chapterSelect">
-                        <option value="" disabled selected>请选择要生成的章节</option>
-                    </select>
-                </div>
-                
-                <textarea class="content-area" id="contentArea" placeholder="这里将显示生成的内容..."></textarea>
-                
                 <div class="export-tools">
-                    <button class="btn btn-outline-primary" onclick="exportWord()">
-                        导出 Word
-                    </button>
-                    <button class="btn btn-outline-primary" onclick="exportText()">
-                        导出 Text
-                    </button>
-                    <button class="btn btn-outline-primary" onclick="copyContent()">
-                        复制内容
-                    </button>
+                    <button class="btn btn-outline-primary" onclick="exportWord()">导出 Word</button>
+                    <button class="btn btn-outline-primary" onclick="exportText()">导出 Text</button>
+                    <button class="btn btn-outline-primary" onclick="copyContent()">复制内容</button>
                 </div>
             </div>
         </div>
