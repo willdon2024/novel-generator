@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI小说生成器</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: "Microsoft YaHei", sans-serif;
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+        .container {
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        .card {
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.5rem;
+            background: #fff;
+            border: none;
+        }
+        .card-body {
+            padding: 1.5rem;
+        }
+        .api-key-card {
+            margin-bottom: 1rem;
+        }
+        .api-key-card .card-body {
+            padding: 1rem;
+        }
+        .left-panel .card {
+            height: calc(100vh - 180px);
+        }
+        .chapter-tree {
+            height: calc(100% - 220px);
+            overflow-y: auto;
+            padding: 0.75rem;
+            margin: 0.75rem 0;
+        }
+        .right-panel .card {
+            height: calc(100vh - 180px);
+        }
+        .right-panel .card-body {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            gap: 1.5rem;
+        }
+        .content-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .content-area {
+            flex: 1;
+            padding: 1rem;
+            min-height: 200px;
+            max-height: calc(100vh - 400px);
+            font-size: 16px;
+            line-height: 1.8;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            background-color: #fff;
+            resize: none;
+            margin: 0;
+        }
+        .btn-toolbar {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            margin: 0;
+        }
+        .btn-group {
+            display: flex;
+            gap: 0.75rem;
+        }
+        .ai-suggestion {
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin: 0;
+        }
+        .ai-suggestion h6 {
+            margin-bottom: 0.75rem;
+            color: #495057;
+        }
+        .form-label {
+            margin-bottom: 0.5rem;
+            color: #495057;
+            font-weight: 500;
+        }
+        .form-control, .form-select {
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            border-color: #e9ecef;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+        .btn {
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+        }
+        .chapter-item {
+            padding: 0.75rem 1rem;
+            margin: 0.5rem 0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .chapter-item:hover {
+            background-color: #f8f9fa;
+        }
+        .chapter-item.active {
+            background-color: #e9ecef;
+            border-left: 3px solid #0d6efd;
+        }
+        h1 {
+            color: #212529;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        h5.card-title {
+            color: #212529;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        .row {
+            margin: 0 -1rem;
+        }
+        .col-md-4, .col-md-8 {
+            padding: 0 1rem;
+        }
+        @media (min-width: 768px) {
+            .col-md-4 {
+                width: 32%;
+            }
+            .col-md-8 {
+                width: 68%;
+            }
+        }
+        .btn-group.w-100 {
+            position: absolute;
+            bottom: 1rem;
+            left: 1.5rem;
+            right: 1.5rem;
+            width: calc(100% - 3rem) !important;
+        }
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .loading-content {
+            text-align: center;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+        .generation-progress {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        .progress {
+            height: 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #e9ecef;
+        }
+        .progress-bar {
+            background-color: #0d6efd;
+            transition: width 0.3s ease;
+        }
+        .suggestion-tips {
+            background: #fff;
+            padding: 0.75rem;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+        .btn i {
+            margin-right: 0.25rem;
+        }
+        .content-type-selector {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+        .outline-tools {
+            background: #fff;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        .modification-tools .card {
+            border: 1px solid #e9ecef;
+            box-shadow: none;
+        }
+        .suggestion-tags .btn-sm {
+            padding: 0.25rem 0.75rem;
+            font-size: 0.875rem;
+        }
+        .badge {
+            font-size: 0.875rem;
+            padding: 0.5rem 1rem;
+        }
+        #modificationTitle {
+            color: #495057;
+            font-size: 1rem;
+        }
+        .outline-status {
+            flex: 1;
+            margin-right: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-3">AI小说生成器</h1>
+        
+        <!-- API Key 设置 -->
+        <div class="card api-key-card">
+            <div class="card-body">
+                <div class="input-group">
+                    <input type="password" id="apiKey" class="form-control" placeholder="请输入你的 Moonshot AI API Key">
+                    <button class="btn btn-primary" onclick="setApiKey()">设置 API Key</button>
+                </div>
+                <small class="text-muted">API Key 仅保存在浏览器中，刷新页面后需要重新输入。<a href="#" onclick="window.open('https://platform.moonshot.cn/')">获取 API Key</a></small>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- 左侧面板 -->
+            <div class="col-md-4 left-panel">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">小说信息</h5>
+                        <div class="mb-3">
+                            <label class="form-label">小说类型</label>
+                            <select id="novelGenre" class="form-select mb-2">
+                                <option value="">选择小说类型</option>
+                                <option value="都市情感">都市情感</option>
+                                <option value="玄幻修真">玄幻修真</option>
+                                <option value="科幻未来">科幻未来</option>
+                                <option value="悬疑推理">悬疑推理</option>
+                                <option value="青春校园">青春校园</option>
+                                <option value="武侠江湖">武侠江湖</option>
+                                <option value="穿越历史">穿越历史</option>
+                                <option value="恐怖惊悚">恐怖惊悚</option>
+                            </select>
+                            <label class="form-label">小说标题</label>
+                            <input type="text" id="novelTitle" class="form-control" placeholder="请输入小说标题">
+                        </div>
+                        <button class="btn btn-primary w-100 mb-3" onclick="generateOutline()">生成大纲</button>
+                        
+                        <h5 class="card-title">章节管理</h5>
+                        <div class="chapter-tree" id="chapterTree"></div>
+                        
+                        <div class="btn-group w-100">
+                            <button class="btn btn-outline-primary" onclick="addChapter()">添加章</button>
+                            <button class="btn btn-outline-primary" onclick="addSection()">添加节</button>
+                            <button class="btn btn-outline-danger" onclick="deleteItem()">删除</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 右侧面板 -->
+            <div class="col-md-8 right-panel">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="content-type-selector mb-3">
+                            <div class="btn-group w-100">
+                                <input type="radio" class="btn-check" name="contentType" id="outlineRadio" value="outline" checked>
+                                <label class="btn btn-outline-primary" for="outlineRadio">
+                                    <i class="bi bi-file-text"></i> 大纲模式
+                                </label>
+                                
+                                <input type="radio" class="btn-check" name="contentType" id="contentRadio" value="content">
+                                <label class="btn btn-outline-primary" for="contentRadio">
+                                    <i class="bi bi-book"></i> 章节内容模式
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="outline-tools mb-3" id="outlineTools">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="outline-status">
+                                    <span class="badge bg-primary" id="currentPartBadge">当前部分：背景设定</span>
+                                    <div class="progress mt-2" style="height: 4px;">
+                                        <div class="progress-bar" role="progressbar" id="progressBar" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                                <div class="btn-group">
+                                    <button class="btn btn-primary" onclick="generateNextPart()" id="generateNextBtn" style="display: none;">
+                                        <i class="bi bi-arrow-right-circle"></i> 继续生成下一部分
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <textarea class="content-area mb-3" id="contentArea" placeholder="这里将显示生成的大纲或章节内容..."></textarea>
+
+                        <div class="modification-tools">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="bi bi-magic"></i> 
+                                        <span id="modificationTitle">大纲修改助手</span>
+                                    </h6>
+                                    <div class="input-group mb-3">
+                                        <input type="text" class="form-control" id="aiSuggestion" 
+                                               placeholder="输入修改建议，例如：'增加更多人物冲突'、'加强故事背景'">
+                                        <button class="btn btn-warning" onclick="regenerateWithSuggestion()">
+                                            <i class="bi bi-arrow-clockwise"></i> 重新生成
+                                        </button>
+                                    </div>
+                                    <div class="suggestion-examples">
+                                        <small class="text-muted">大纲修改建议示例：</small>
+                                        <div class="suggestion-tags mt-2">
+                                            <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="applySuggestion(this)">
+                                                增加更多人物冲突
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="applySuggestion(this)">
+                                                加强故事背景描写
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="applySuggestion(this)">
+                                                增加更多情节转折
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="applySuggestion(this)">
+                                                调整故事节奏
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="applySuggestion(this)">
+                                                强化主线情节
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="export-tools mt-3">
+                            <div class="btn-group w-100">
+                                <button class="btn btn-outline-secondary" onclick="copyContent()">
+                                    <i class="bi bi-clipboard"></i> 复制内容
+                                </button>
+                                <button class="btn btn-outline-secondary" onclick="exportWord()">
+                                    <i class="bi bi-file-word"></i> 导出Word
+                                </button>
+                                <button class="btn btn-outline-secondary" onclick="exportTxt()">
+                                    <i class="bi bi-file-text"></i> 导出TXT
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载动画 -->
+    <div class="loading">
+        <div class="loading-content">
+            <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p id="loadingText">正在生成内容，请稍候...</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentOutline = '';
+        let chapters = [];
+        let selectedItem = null;
+        let sessionId = null;
+        let currentStage = 'background';
+
+        // 设置 API Key
+        async function setApiKey() {
+            const apiKey = document.getElementById('apiKey').value;
+            if (!apiKey) {
+                alert('请输入 API Key');
+                return;
+            }
+
+            showLoading('正在验证 API Key...');
+            try {
+                const response = await fetch('/set_api_key', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({api_key: apiKey})
+                });
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    alert('API Key 设置成功！');
+                } else {
+                    alert('API Key 设置失败：' + data.message);
+                }
+            } catch (error) {
+                alert('设置失败：' + error.message);
+            }
+            hideLoading();
+        }
+
+        function updateProgress(stage) {
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const progress = document.getElementById('generationProgress');
+            
+            progress.style.display = 'block';
+            
+            switch(stage) {
+                case 'background':
+                    progressBar.style.width = '25%';
+                    progressBar.textContent = '25%';
+                    progressText.textContent = '正在生成背景和人物设定...';
+                    break;
+                case 'part1':
+                    progressBar.style.width = '50%';
+                    progressBar.textContent = '50%';
+                    progressText.textContent = '正在生成第1-6章大纲...';
+                    break;
+                case 'part2':
+                    progressBar.style.width = '75%';
+                    progressBar.textContent = '75%';
+                    progressText.textContent = '正在生成第7-12章大纲...';
+                    break;
+                case 'part3':
+                    progressBar.style.width = '100%';
+                    progressBar.textContent = '100%';
+                    progressText.textContent = '正在生成第13-15章大纲...';
+                    break;
+                case 'complete':
+                    progressText.textContent = '大纲生成完成！';
+                    setTimeout(() => {
+                        progress.style.display = 'none';
+                    }, 2000);
+                    break;
+            }
+        }
+
+        function generateOutline() {
+            const title = document.getElementById('novelTitle').value;
+            const genre = document.getElementById('novelGenre').value;
+            
+            if (!title) {
+                alert('请输入小说标题');
+                return;
+            }
+            if (!genre) {
+                alert('请选择小说类型');
+                return;
+            }
+
+            // 重置生成状态
+            sessionId = Date.now().toString();
+            currentStage = 'background';
+            document.getElementById('contentArea').value = '';
+            document.getElementById('generationProgress').style.display = 'block';
+            document.getElementById('progressBar').style.width = '0%';
+            document.getElementById('progressBar').textContent = '0%';
+            document.getElementById('progressText').textContent = '准备生成...';
+            
+            // 显示加载状态
+            showLoading('正在生成背景和人物设定...');
+            document.getElementById('generateNextBtn').style.display = 'none';
+            
+            generateNextPart();
+        }
+
+        function generateNextPart() {
+            const title = document.getElementById('novelTitle').value;
+            const genre = document.getElementById('novelGenre').value;
+            
+            updateProgress(currentStage);
+            
+            fetch('/generate_outline_part', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    title: title,
+                    genre: genre,
+                    session_id: sessionId,
+                    stage: currentStage
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const output = document.getElementById('contentArea');
+                    if (currentStage === 'background') {
+                        output.value = data.content;
+                    } else {
+                        output.value += '\n\n' + data.content;
+                    }
+                    
+                    currentStage = data.next_stage;
+                    updateProgress(currentStage);
+                    
+                    if (currentStage !== 'complete') {
+                        document.getElementById('generateNextBtn').style.display = 'block';
+                        document.getElementById('generateNextBtn').textContent = `继续生成 ${getNextPartName()}`;
+                    } else {
+                        document.getElementById('generateNextBtn').style.display = 'none';
+                        alert('大纲生成完成！您可以使用人工干预功能进行修改。');
+                    }
+                } else {
+                    alert('生成失败：' + data.message);
+                }
+                hideLoading();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('生成失败，请重试');
+                hideLoading();
+            });
+        }
+
+        function getNextPartName() {
+            switch(currentStage) {
+                case 'part1':
+                    return '第1-6章';
+                case 'part2':
+                    return '第7-12章';
+                case 'part3':
+                    return '第13-15章';
+                default:
+                    return '下一部分';
+            }
+        }
+
+        function getLoadingText() {
+            switch(currentStage) {
+                case 'background':
+                    return '正在生成背景和人物设定...';
+                case 'part1':
+                    return '正在生成第1-6章大纲...';
+                case 'part2':
+                    return '正在生成第7-12章大纲...';
+                case 'part3':
+                    return '正在生成第13-15章大纲...';
+                default:
+                    return '正在生成...';
+            }
+        }
+
+        // 添加继续生成按钮的点击事件
+        document.getElementById('generateNextBtn').addEventListener('click', function() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('generateNextBtn').style.display = 'none';
+            generateNextPart();
+        });
+
+        // 更新加载提示文本
+        setInterval(() => {
+            const loadingElement = document.getElementById('loading');
+            const loadingTextElement = document.getElementById('loadingText');
+            if (loadingElement.style.display === 'block' && loadingTextElement) {
+                loadingTextElement.textContent = getLoadingText();
+            }
+        }, 100);
+
+        // 生成章节内容
+        async function generateContent() {
+            if (!selectedItem || selectedItem.type !== 'section') {
+                alert('请先选择一个小节！');
+                return;
+            }
+
+            const title = document.getElementById('novelTitle').value;
+            const genre = document.getElementById('novelGenre').value;
+            const chapter = chapters.find(c => c.sections.some(s => s.id === selectedItem.id));
+            if (!chapter) return;
+
+            showLoading('正在生成内容...');
+            try {
+                const response = await fetch('/generate_content', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        title: title,
+                        genre: genre,
+                        chapter_title: chapter.title,
+                        section_title: selectedItem.title,
+                        outline: currentOutline
+                    })
+                });
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    document.getElementById('contentArea').value = data.content;
+                    document.getElementById('contentRadio').checked = true;
+                } else {
+                    alert('生成失败：' + data.message);
+                }
+            } catch (error) {
+                alert('生成失败：' + error.message);
+            }
+            hideLoading();
+        }
+
+        // 添加章
+        function addChapter() {
+            const chapterName = prompt('请输入章的标题：');
+            if (chapterName) {
+                const chapter = {
+                    id: Date.now(),
+                    type: 'chapter',
+                    title: `第${chapters.length + 1}章 ${chapterName}`,
+                    sections: []
+                };
+                chapters.push(chapter);
+                updateChapterTree();
+            }
+        }
+
+        // 添加节
+        function addSection() {
+            if (!selectedItem || selectedItem.type !== 'chapter') {
+                alert('请先选择一个章！');
+                return;
+            }
+
+            const sectionName = prompt('请输入节的标题：');
+            if (sectionName) {
+                const chapter = chapters.find(c => c.id === selectedItem.id);
+                if (chapter) {
+                    chapter.sections.push({
+                        id: Date.now(),
+                        type: 'section',
+                        title: `第${chapter.sections.length + 1}节 ${sectionName}`
+                    });
+                    updateChapterTree();
+                }
+            }
+        }
+
+        // 删除章节
+        function deleteItem() {
+            if (!selectedItem) {
+                alert('请先选择要删除的项目！');
+                return;
+            }
+
+            if (confirm('确定要删除吗？')) {
+                if (selectedItem.type === 'chapter') {
+                    chapters = chapters.filter(c => c.id !== selectedItem.id);
+                } else {
+                    const chapter = chapters.find(c => c.sections.some(s => s.id === selectedItem.id));
+                    if (chapter) {
+                        chapter.sections = chapter.sections.filter(s => s.id !== selectedItem.id);
+                    }
+                }
+                selectedItem = null;
+                updateChapterTree();
+            }
+        }
+
+        // 更新章节树
+        function updateChapterTree() {
+            const tree = document.getElementById('chapterTree');
+            tree.innerHTML = '';
+            
+            chapters.forEach(chapter => {
+                const chapterDiv = document.createElement('div');
+                chapterDiv.className = `chapter-item ${selectedItem && selectedItem.id === chapter.id ? 'active' : ''}`;
+                chapterDiv.onclick = () => selectItem(chapter);
+                chapterDiv.innerHTML = `<i class="bi bi-book"></i> ${chapter.title}`;
+                tree.appendChild(chapterDiv);
+                
+                chapter.sections.forEach(section => {
+                    const sectionDiv = document.createElement('div');
+                    sectionDiv.className = `chapter-item ms-4 ${selectedItem && selectedItem.id === section.id ? 'active' : ''}`;
+                    sectionDiv.onclick = () => selectItem(section);
+                    sectionDiv.innerHTML = `<i class="bi bi-file-text"></i> ${section.title}`;
+                    tree.appendChild(sectionDiv);
+                });
+            });
+        }
+
+        // 选择章节
+        function selectItem(item) {
+            selectedItem = item;
+            updateChapterTree();
+        }
+
+        // 显示加载动画
+        function showLoading(text) {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('loadingText').textContent = text;
+        }
+
+        // 隐藏加载动画
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        // 添加新的功能函数
+        function copyContent() {
+            const content = document.getElementById('contentArea').value;
+            navigator.clipboard.writeText(content).then(() => {
+                alert('内容已复制到剪贴板！');
+            }).catch(err => {
+                alert('复制失败：' + err);
+            });
+        }
+
+        function exportWord() {
+            // TODO: 实现导出Word功能
+            alert('导出Word功能即将推出');
+        }
+
+        function exportTxt() {
+            const content = document.getElementById('contentArea').value;
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = document.getElementById('novelTitle').value + '.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        async function regenerateWithSuggestion() {
+            const suggestion = document.getElementById('aiSuggestion').value;
+            if (!suggestion) {
+                alert('请输入修改建议');
+                return;
+            }
+            
+            const content = document.getElementById('contentArea').value;
+            if (!content) {
+                alert('请先生成内容再进行修改');
+                return;
+            }
+
+            showLoading('正在根据建议修改内容...');
+            try {
+                const response = await fetch('/regenerate_with_suggestion', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        content: content,
+                        suggestion: suggestion
+                    })
+                });
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    document.getElementById('contentArea').value = data.content;
+                    alert('内容已根据建议重新生成！');
+                } else {
+                    alert('修改失败：' + data.message);
+                }
+            } catch (error) {
+                alert('修改失败：' + error.message);
+            }
+            hideLoading();
+        }
+
+        // 添加新的JavaScript函数
+        function applySuggestion(button) {
+            document.getElementById('aiSuggestion').value = button.textContent.trim();
+        }
+
+        // 修改内容类型切换处理
+        document.querySelectorAll('input[name="contentType"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const isOutlineMode = this.value === 'outline';
+                document.getElementById('modificationTitle').textContent = 
+                    isOutlineMode ? '大纲修改助手' : '内容修改助手';
+                document.getElementById('outlineTools').style.display = 
+                    isOutlineMode ? 'block' : 'none';
+                
+                // 更新建议示例
+                updateSuggestionExamples(isOutlineMode);
+            });
+        });
+
+        function updateSuggestionExamples(isOutlineMode) {
+            const suggestionTags = document.querySelector('.suggestion-tags');
+            suggestionTags.innerHTML = '';
+            
+            const suggestions = isOutlineMode ? [
+                '增加更多人物冲突',
+                '加强故事背景描写',
+                '增加更多情节转折',
+                '调整故事节奏',
+                '强化主线情节'
+            ] : [
+                '增加更多细节描写',
+                '加入更多对话',
+                '强化情感表达',
+                '添加环境描写',
+                '突出人物性格'
+            ];
+            
+            suggestions.forEach(suggestion => {
+                const button = document.createElement('button');
+                button.className = 'btn btn-sm btn-outline-secondary me-2 mb-2';
+                button.onclick = () => applySuggestion(button);
+                button.textContent = suggestion;
+                suggestionTags.appendChild(button);
+            });
+        }
+    </script>
+</body>
+</html> 
+</html> 
