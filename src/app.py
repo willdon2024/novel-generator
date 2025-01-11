@@ -15,18 +15,29 @@ class NovelWriter:
         openai.api_base = "https://api.moonshot.cn/v1"
         
     def generate_outline(self, title, genre=""):
-        system_prompt = """你是一个专业的小说策划。请根据小说标题和类型，创作一个详细的故事大纲。
+        system_prompt = """你是一个专业的小说策划。请根据小说标题和类型，创作一个详细的长篇小说大纲。
 要求：
-1. 提供详细的故事背景设定
-2. 主要人物介绍（包括性格特点和人物关系）
-3. 分为10-15章，每章3-5节
-4. 每一节提供200-300字的内容概要
+1. 提供详细的故事背景设定（至少500字）
+2. 主要人物介绍（包括性格特点和人物关系，每个主要人物至少200字）
+3. 【重要】必须分为12-15章，每章必须包含4-5节，不得少于此数量
+4. 【重要】每一节必须提供详细的内容概要（每节概要300-500字）
 5. 确保故事情节连贯，符合该类型小说的特点
 6. 体现人物成长和情感发展
-7. 设计合理的故事高潮和转折点
-8. 为每个主要人物设计独特的成长线索"""
+7. 设计合理的故事高潮和转折点（至少3个重要转折）
+8. 为每个主要人物设计独特的成长线索
+9. 【格式要求】请严格按照以下格式输出：
+   - 故事背景：（具体内容）
+   - 主要人物：（每个人物具体介绍）
+   - 第X章 章节名
+     第X节 节标题：（详细概要）
+   ...（确保输出所有章节）"""
 
-        outline_prompt = f"请为{genre}小说《{title}》创作详细大纲。要求制作一个长篇小说的规模，情节丰富，人物立体。"
+        outline_prompt = f"""请为{genre}小说《{title}》创作详细大纲。
+要求：
+1. 必须是长篇小说规模（至少12章，每章4-5节）
+2. 情节丰富，人物立体
+3. 严格按照system message中的格式输出
+4. 确保完整输出所有章节，不要因为长度限制而截断"""
         
         try:
             completion = openai.ChatCompletion.create(
@@ -36,9 +47,15 @@ class NovelWriter:
                     {"role": "user", "content": outline_prompt}
                 ],
                 temperature=0.7,
-                max_tokens=4000  # 增加token数以容纳更长的大纲
+                max_tokens=6000  # 增加token数以确保完整输出
             )
-            return completion.choices[0].message.content
+            
+            # 检查生成的内容是否完整
+            content = completion.choices[0].message.content
+            if "第12章" not in content:
+                # 如果内容不完整，尝试重新生成
+                return self.generate_outline(title, genre)
+            return content
         except Exception as e:
             return f"生成大纲时发生错误: {str(e)}"
         
