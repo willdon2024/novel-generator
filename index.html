@@ -202,58 +202,68 @@
             <div class="card-body">
                 <form id="novelForm">
                     <div class="mb-3">
-                        <label for="apiKey" class="form-label">Moonshot API Key</label>
+                        <label for="authCode" class="form-label">授权码</label>
                         <div class="api-key-group">
-                            <input type="password" class="form-control" id="apiKey" required>
-                            <button type="button" class="btn btn-primary" id="confirmApiKey" style="min-width: 80px; line-height: 1;">确认</button>
+                            <input type="text" class="form-control" id="authCode" required>
+                            <button type="button" class="btn btn-primary" id="verifyAuth" style="min-width: 80px; line-height: 1;">验证</button>
                         </div>
-                        <small class="text-muted">请输入你的 Moonshot API Key</small>
+                        <small class="text-muted">请输入您的授权码</small>
                     </div>
-                    <div class="mb-3">
-                        <label for="title" class="form-label">小说标题</label>
-                        <input type="text" class="form-control" id="title" required placeholder="请输入小说标题">
+                    <div id="mainContent" style="display: none;">
+                        <div class="mb-3">
+                            <label for="apiKey" class="form-label">Moonshot API Key</label>
+                            <div class="api-key-group">
+                                <input type="password" class="form-control" id="apiKey" required>
+                                <button type="button" class="btn btn-primary" id="confirmApiKey" style="min-width: 80px; line-height: 1;">确认</button>
+                            </div>
+                            <small class="text-muted">请输入你的 Moonshot API Key</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="title" class="form-label">小说标题</label>
+                            <input type="text" class="form-control" id="title" required placeholder="请输入小说标题">
+                        </div>
+                        <div class="mb-3">
+                            <label for="novelType" class="form-label">小说类型</label>
+                            <select class="form-select" id="novelType" required>
+                                <option value="" disabled selected>请选择小说类型</option>
+                                <optgroup label="玄幻仙侠">
+                                    <option value="玄幻修真">玄幻修真</option>
+                                    <option value="武侠江湖">武侠江湖</option>
+                                    <option value="仙侠修仙">仙侠修仙</option>
+                                    <option value="东方奇幻">东方奇幻</option>
+                                </optgroup>
+                                <optgroup label="现代都市">
+                                    <option value="都市生活">都市生活</option>
+                                    <option value="职场商战">职场商战</option>
+                                    <option value="青春校园">青春校园</option>
+                                    <option value="现代言情">现代言情</option>
+                                </optgroup>
+                                <optgroup label="悬疑烧脑">
+                                    <option value="悬疑推理">悬疑推理</option>
+                                    <option value="惊悚恐怖">惊悚恐怖</option>
+                                    <option value="冒险探险">冒险探险</option>
+                                    <option value="灵异神怪">灵异神怪</option>
+                                </optgroup>
+                                <optgroup label="科幻未来">
+                                    <option value="硬核科幻">硬核科幻</option>
+                                    <option value="未来世界">未来世界</option>
+                                    <option value="游戏竞技">游戏竞技</option>
+                                    <option value="机甲战争">机甲战争</option>
+                                </optgroup>
+                                <optgroup label="历史军事">
+                                    <option value="历史架空">历史架空</option>
+                                    <option value="军事战争">军事战争</option>
+                                    <option value="谍战特工">谍战特工</option>
+                                    <option value="历史穿越">历史穿越</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="generateBtn">
+                            <span class="d-flex align-items-center justify-content-center">
+                                <span>开始生成</span>
+                            </span>
+                        </button>
                     </div>
-                    <div class="mb-3">
-                        <label for="novelType" class="form-label">小说类型</label>
-                        <select class="form-select" id="novelType" required>
-                            <option value="" disabled selected>请选择小说类型</option>
-                            <optgroup label="玄幻仙侠">
-                                <option value="玄幻修真">玄幻修真</option>
-                                <option value="武侠江湖">武侠江湖</option>
-                                <option value="仙侠修仙">仙侠修仙</option>
-                                <option value="东方奇幻">东方奇幻</option>
-                            </optgroup>
-                            <optgroup label="现代都市">
-                                <option value="都市生活">都市生活</option>
-                                <option value="职场商战">职场商战</option>
-                                <option value="青春校园">青春校园</option>
-                                <option value="现代言情">现代言情</option>
-                            </optgroup>
-                            <optgroup label="悬疑烧脑">
-                                <option value="悬疑推理">悬疑推理</option>
-                                <option value="惊悚恐怖">惊悚恐怖</option>
-                                <option value="冒险探险">冒险探险</option>
-                                <option value="灵异神怪">灵异神怪</option>
-                            </optgroup>
-                            <optgroup label="科幻未来">
-                                <option value="硬核科幻">硬核科幻</option>
-                                <option value="未来世界">未来世界</option>
-                                <option value="游戏竞技">游戏竞技</option>
-                                <option value="机甲战争">机甲战争</option>
-                            </optgroup>
-                            <optgroup label="历史军事">
-                                <option value="历史架空">历史架空</option>
-                                <option value="军事战争">军事战争</option>
-                                <option value="谍战特工">谍战特工</option>
-                                <option value="历史穿越">历史穿越</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary" id="generateBtn">
-                        <span class="d-flex align-items-center justify-content-center">
-                            <span>开始生成</span>
-                        </span>
-                    </button>
                 </form>
             </div>
         </div>
@@ -674,6 +684,60 @@ ${currentContent}
                 alert('修改失败，请稍后重试');
             }
         }
+
+        // 添加授权码验证系统
+        const validAuthCodes = {
+            'AUTH001-2024': { expiry: '2024-12-31', user: 'user1' },
+            'AUTH002-2024': { expiry: '2024-12-31', user: 'user2' }
+            // 可以添加更多授权码
+        };
+
+        document.getElementById('verifyAuth').addEventListener('click', function() {
+            const authCode = document.getElementById('authCode').value;
+            if (!authCode) {
+                alert('请输入授权码');
+                return;
+            }
+
+            const authInfo = validAuthCodes[authCode];
+            if (!authInfo) {
+                alert('无效的授权码');
+                return;
+            }
+
+            const now = new Date();
+            const expiry = new Date(authInfo.expiry);
+            if (now > expiry) {
+                alert('授权码已过期');
+                return;
+            }
+
+            // 保存授权信息
+            localStorage.setItem('novelGenAuthCode', authCode);
+            localStorage.setItem('novelGenUser', authInfo.user);
+            
+            // 显示主要内容
+            document.getElementById('mainContent').style.display = 'block';
+            
+            alert('授权验证成功！');
+        });
+
+        // 页面加载时检查授权
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedAuthCode = localStorage.getItem('novelGenAuthCode');
+            if (savedAuthCode && validAuthCodes[savedAuthCode]) {
+                const now = new Date();
+                const expiry = new Date(validAuthCodes[savedAuthCode].expiry);
+                if (now <= expiry) {
+                    document.getElementById('authCode').value = savedAuthCode;
+                    document.getElementById('mainContent').style.display = 'block';
+                } else {
+                    localStorage.removeItem('novelGenAuthCode');
+                    localStorage.removeItem('novelGenUser');
+                }
+            }
+            loadApiKey();
+        });
     </script>
 </body>
 </html> 
