@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI小说生成器</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin-top: 2rem;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .chapter-tree {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .chapter-item {
+            cursor: pointer;
+            padding: 8px;
+            margin: 4px 0;
+            border-radius: 4px;
+        }
+        .chapter-item:hover {
+            background-color: #f0f0f0;
+        }
+        .chapter-item.active {
+            background-color: #e3f2fd;
+        }
+        .content-area {
+            min-height: 400px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 1000;
+        }
+        .loading-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">AI小说生成器</h1>
+        
+        <!-- API Key 设置 -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="input-group">
+                    <input type="password" id="apiKey" class="form-control" placeholder="请输入你的 API Key">
+                    <button class="btn btn-primary" onclick="setApiKey()">设置 API Key</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- 左侧面板 -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">小说信息</h5>
+                        <div class="mb-3">
+                            <input type="text" id="novelTitle" class="form-control mb-2" placeholder="请输入小说标题">
+                            <select id="novelGenre" class="form-select mb-2">
+                                <option value="">选择小说类型</option>
+                                <option value="穿越历史">穿越历史</option>
+                                <option value="都市情感">都市情感</option>
+                                <option value="玄幻修真">玄幻修真</option>
+                                <option value="科幻未来">科幻未来</option>
+                                <option value="悬疑推理">悬疑推理</option>
+                                <option value="青春校园">青春校园</option>
+                                <option value="武侠江湖">武侠江湖</option>
+                                <option value="恐怖惊悚">恐怖惊悚</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary w-100 mb-3" onclick="generateOutline()">生成大纲</button>
+                        
+                        <h5 class="card-title mt-4">章节管理</h5>
+                        <div class="chapter-tree" id="chapterTree"></div>
+                        
+                        <div class="btn-group w-100 mt-3">
+                            <button class="btn btn-outline-primary" onclick="addChapter()">添加章</button>
+                            <button class="btn btn-outline-primary" onclick="addSection()">添加节</button>
+                            <button class="btn btn-outline-danger" onclick="deleteItem()">删除</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 右侧面板 -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="btn-group mb-3">
+                            <input type="radio" class="btn-check" name="contentType" id="outlineRadio" value="outline" checked>
+                            <label class="btn btn-outline-primary" for="outlineRadio">大纲</label>
+                            
+                            <input type="radio" class="btn-check" name="contentType" id="contentRadio" value="content">
+                            <label class="btn btn-outline-primary" for="contentRadio">章节内容</label>
+                        </div>
+                        
+                        <textarea class="content-area border rounded p-3" id="contentArea" style="width: 100%; resize: vertical;"></textarea>
+                        
+                        <div class="btn-group mt-3">
+                            <button class="btn btn-primary" onclick="saveOutline()" id="saveOutlineBtn" style="display: none;">保存大纲修改</button>
+                            <button class="btn btn-primary ms-2" onclick="generateContent()" id="generateContentBtn">生成选中章节内容</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载动画 -->
+    <div class="loading" id="loading">
+        <div class="loading-content">
+            <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p id="loadingText">正在生成内容，请稍候...</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentOutline = '';
+        let chapters = [];
+        let selectedItem = null;
+
+        // 设置 API Key
+        async function setApiKey() {
+            const apiKey = document.getElementById('apiKey').value;
+            if (!apiKey) {
+                alert('请输入 API Key');
+                return;
+            }
+
+            showLoading('正在验证 API Key...');
+            try {
+                const response = await fetch('/set_api_key', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({api_key: apiKey})
+                });
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    alert('API Key 设置成功！');
+                } else {
+                    alert('API Key 设置失败：' + data.message);
+                }
+            } catch (error) {
+                alert('设置失败：' + error.message);
+            }
+            hideLoading();
+        }
+
+        // 生成大纲
+        async function generateOutline() {
+            const title = document.getElementById('novelTitle').value;
+            const genre = document.getElementById('novelGenre').value;
+            
+            if (!title) {
+                alert('请输入小说标题');
+                return;
+            }
+            
+            if (!genre) {
+                alert('请选择小说类型');
+                return;
+            }
+
+            showLoading('正在生成大纲...');
+            try {
+                const response = await fetch('/generate_outline', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        title: title,
+                        genre: genre
+                    })
+                });
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    currentOutline = data.outline;
+                    document.getElementById('contentArea').value = currentOutline;
+                    document.getElementById('outlineRadio').checked = true;
+                } else {
+                    alert('生成失败：' + data.message);
+                }
+            } catch (error) {
+                alert('生成失败：' + error.message);
+            }
+            hideLoading();
+        }
+
+        // 生成内容
+        async function generateContent() {
+            if (!selectedItem || selectedItem.type !== 'section') {
+                alert('请先选择一个小节！');
+                return;
+            }
+
+            const title = document.getElementById('novelTitle').value;
+            const genre = document.getElementById('novelGenre').value;
+            const chapter = chapters.find(c => c.sections.some(s => s.id === selectedItem.id));
+            if (!chapter) return;
+
+            showLoading('正在生成内容...');
+            try {
+                const response = await fetch('/generate_content', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        title: title,
+                        genre: genre,
+                        chapter_title: chapter.title,
+                        section_title: selectedItem.title,
+                        outline: currentOutline
+                    })
+                });
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    document.getElementById('contentArea').value = data.content;
+                    document.getElementById('contentRadio').checked = true;
+                } else {
+                    alert('生成失败：' + data.message);
+                }
+            } catch (error) {
+                alert('生成失败：' + error.message);
+            }
+            hideLoading();
+        }
+
+        // 添加章
+        function addChapter() {
+            const chapterName = prompt('请输入章的标题：');
+            if (chapterName) {
+                const chapter = {
+                    id: Date.now(),
+                    type: 'chapter',
+                    title: `第${chapters.length + 1}章 ${chapterName}`,
+                    sections: []
+                };
+                chapters.push(chapter);
+                updateChapterTree();
+            }
+        }
+
+        // 添加节
+        function addSection() {
+            if (!selectedItem || selectedItem.type !== 'chapter') {
+                alert('请先选择一个章！');
+                return;
+            }
+
+            const sectionName = prompt('请输入节的标题：');
+            if (sectionName) {
+                const chapter = chapters.find(c => c.id === selectedItem.id);
+                if (chapter) {
+                    chapter.sections.push({
+                        id: Date.now(),
+                        type: 'section',
+                        title: `第${chapter.sections.length + 1}节 ${sectionName}`
+                    });
+                    updateChapterTree();
+                }
+            }
+        }
+
+        // 删除章节
+        function deleteItem() {
+            if (!selectedItem) {
+                alert('请先选择要删除的项目！');
+                return;
+            }
+
+            if (confirm('确定要删除吗？')) {
+                if (selectedItem.type === 'chapter') {
+                    chapters = chapters.filter(c => c.id !== selectedItem.id);
+                } else {
+                    const chapter = chapters.find(c => c.sections.some(s => s.id === selectedItem.id));
+                    if (chapter) {
+                        chapter.sections = chapter.sections.filter(s => s.id !== selectedItem.id);
+                    }
+                }
+                selectedItem = null;
+                updateChapterTree();
+            }
+        }
+
+        // 更新章节树
+        function updateChapterTree() {
+            const tree = document.getElementById('chapterTree');
+            tree.innerHTML = '';
+            
+            chapters.forEach(chapter => {
+                const chapterDiv = document.createElement('div');
+                chapterDiv.className = `chapter-item ${selectedItem && selectedItem.id === chapter.id ? 'active' : ''}`;
+                chapterDiv.onclick = () => selectItem(chapter);
+                chapterDiv.innerHTML = `<i class="bi bi-book"></i> ${chapter.title}`;
+                tree.appendChild(chapterDiv);
+                
+                chapter.sections.forEach(section => {
+                    const sectionDiv = document.createElement('div');
+                    sectionDiv.className = `chapter-item ms-4 ${selectedItem && selectedItem.id === section.id ? 'active' : ''}`;
+                    sectionDiv.onclick = () => selectItem(section);
+                    sectionDiv.innerHTML = `<i class="bi bi-file-text"></i> ${section.title}`;
+                    tree.appendChild(sectionDiv);
+                });
+            });
+        }
+
+        // 选择章节
+        function selectItem(item) {
+            selectedItem = item;
+            updateChapterTree();
+        }
+
+        // 显示加载动画
+        function showLoading(text) {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('loadingText').textContent = text;
+        }
+
+        // 隐藏加载动画
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+    </script>
+</body>
+</html> 
