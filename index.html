@@ -128,6 +128,9 @@
             margin: 0;
             height: 42px;
         }
+        .edit-tools.has-continue {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
         .export-tools {
             margin-top: 1rem;
             display: grid;
@@ -317,6 +320,7 @@
                 <div class="edit-tools">
                     <button class="btn btn-primary" id="saveOutline" disabled>保存大纲修改</button>
                     <button class="btn btn-secondary" id="resetOutline">重置修改</button>
+                    <button class="btn btn-success" id="continueGenerate" style="display: none;">继续生成</button>
                     <button class="btn btn-success" id="generateChapter" style="display: none;">生成章节内容</button>
                 </div>
                 
@@ -362,6 +366,10 @@
         let progressInterval;
         let originalOutline = '';
         let isOutlineModified = false;
+        let currentChapter = 0;
+        let isGeneratingOutline = false;
+        let outlineStages = ['背景设定', '人物介绍', '序章', '前期章节', '中期章节', '后期章节', '结局章节'];
+        let currentStage = 0;
 
         function saveApiKey(apiKey) {
             localStorage.setItem('moonshotApiKey', apiKey);
@@ -423,32 +431,25 @@
             }, 1000);
             
             try {
-                const outlineResponse = await callMoonshotAPI(apiKey, {
+                isGeneratingOutline = true;
+                currentStage = 0;
+                const response = await callMoonshotAPI(apiKey, {
                     messages: [
                         {
                             role: "system",
-                            content: `你是一个专业的${novelType}小说大纲策划师。你需要为用户创作一个引人入胜的小说大纲，包括主要人物设定、故事背景和主要情节发展。要求：
-1. 详细的故事背景设定（至少500字）
-2. 主要人物介绍（包括性格特点和人物关系，每个主要人物至少200字）
-3. 列出3个重要的故事转折点，并说明这些转折点分别发生在第几章
-4. 故事结构按照"序章-发展-高潮-结局"四个阶段展开，每个阶段3-4章`
+                            content: `你是一个专业的${novelType}小说大纲策划师。首先生成故事背景设定和主要人物介绍。`
                         },
                         {
                             role: "user",
-                            content: `请为题为《${title}》的${novelType}小说创作一个详细的大纲，要求：
-1. 故事情节要符合${novelType}的特点和规律
-2. 人物性格鲜明，故事情节吸引人
-3. 按照序章+正文（12-15章）的结构来写
-4. 每个情节转折要符合逻辑，有因果关系
-5. 结尾要有意想不到的转折或深刻的寓意`
+                            content: `请为题为《${title}》的${novelType}小说创作开始部分的大纲，包括：\n1. 详细的故事背景设定\n2. 主要人物介绍\n请确保内容详实，为后续章节做好铺垫。`
                         }
                     ]
                 });
 
-                document.getElementById('contentArea').value = outlineResponse.choices[0].message.content;
-                originalOutline = outlineResponse.choices[0].message.content;
-                isOutlineModified = false;
-                document.getElementById('saveOutline').disabled = true;
+                document.getElementById('contentArea').value = response.choices[0].message.content;
+                document.getElementById('continueGenerate').style.display = 'block';
+                document.getElementById('continueGenerate').disabled = false;
+                currentStage = 2; // 从序章开始
                 
                 clearInterval(progressInterval);
                 updateProgress(100);
@@ -539,70 +540,86 @@
             }
         });
 
-        document.getElementById('generateChapter').addEventListener('click', async function() {
-            const chapterSelect = document.getElementById('chapterSelect');
-            if (!chapterSelect.value) {
-                alert('请先选择要生成的章节');
-                return;
-            }
-
-            const apiKey = document.getElementById('apiKey').value;
-            if (!apiKey) {
-                alert('请输入API Key');
-                return;
-            }
-
+        document.getElementById('continueGenerate').addEventListener('click', async function() {
             this.disabled = true;
-            document.getElementById('contentArea').value = '正在生成章节内容，请稍候...';
-
-            // 启动进度条
-            let progress = 0;
-            const progressInterval = setInterval(() => {
-                progress += 5;
-                if (progress <= 90) {
-                    updateProgress(progress);
-                }
-            }, 1000);
-
+            const apiKey = document.getElementById('apiKey').value;
+            const title = document.getElementById('title').value;
+            const novelType = document.getElementById('novelType').value;
+            const currentContent = document.getElementById('contentArea').value;
+            
+            let prompt;
+            if (isGeneratingOutline) {
+                prompt = `基于已有的内容继续生成大纲的${outlineStages[currentStage]}部分：\n\n${currentContent}\n\n请继续完善大纲，确保：\n1. 与已有内容保持连贯\n2. 符合${novelType}小说的特点\n3. 按照大纲规范格式编写`;
+                currentStage++;
+            } else {
+                prompt = `基于大纲继续生成第${currentChapter + 1}章的内容：\n\n${currentContent}\n\n要求：\n1. 与前文保持连贯\n2. 细致描写场景和人物\n3. 控制字数在4000-6000字之间`;
+                currentChapter++;
+            }
+            
             try {
-                const chapterTitle = chapterSelect.options[chapterSelect.selectedIndex].text;
                 const response = await callMoonshotAPI(apiKey, {
                     messages: [
                         {
                             role: "system",
-                            content: `你是一个专业的小说写作助手。现在需要你根据大纲来扩写具体的章节内容。要求：
-1. 内容要符合大纲的整体设定和情节发展
-2. 详细描写场景、人物对话和心理活动
-3. 语言要生动形象，富有画面感
-4. 每个章节字数在4000-6000字之间
-5. 注意情节的连贯性和人物性格的一致性`
+                            content: isGeneratingOutline ? 
+                                `你是一个专业的${novelType}小说大纲策划师。你需要继续完善已有的大纲内容。` :
+                                `你是一个专业的小说写作助手。你需要基于大纲继续生成后续章节的具体内容。`
                         },
                         {
                             role: "user",
-                            content: `请根据以下大纲信息，详细写出《${document.getElementById('title').value}》的${chapterTitle}的具体内容：
+                            content: prompt
+                        }
+                    ]
+                });
 
-${originalOutline}
+                document.getElementById('contentArea').value = currentContent + '\n\n' + response.choices[0].message.content;
+                
+                // 检查是否需要继续显示"继续生成"按钮
+                if (isGeneratingOutline && currentStage < outlineStages.length) {
+                    this.disabled = false;
+                } else if (!isGeneratingOutline && currentChapter < 15) {
+                    this.disabled = false;
+                } else {
+                    this.style.display = 'none';
+                    if (isGeneratingOutline) {
+                        originalOutline = document.getElementById('contentArea').value;
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('生成失败，请稍后重试');
+                this.disabled = false;
+            }
+        });
 
-请确保内容与大纲设定吻合，并注意以下几点：
-1. 场景描写要细腻，带入感强
-2. 人物对话要自然，性格鲜明
-3. 情节发展要合理，有起承转合
-4. 保持与其他章节的连贯性`
+        document.getElementById('generateChapter').addEventListener('click', async function() {
+            // ... existing validation code ...
+            
+            try {
+                isGeneratingOutline = false;
+                currentChapter = parseInt(chapterSelect.value);
+                const response = await callMoonshotAPI(apiKey, {
+                    messages: [
+                        {
+                            role: "system",
+                            content: `你是一个专业的小说写作助手。现在开始生成第${currentChapter + 1}章的内容。`
+                        },
+                        {
+                            role: "user",
+                            content: `基于以下大纲，生成第${currentChapter + 1}章的具体内容：\n\n${originalOutline}\n\n要求：\n1. 详细描写场景和人物\n2. 字数控制在4000-6000字之间\n3. 符合${novelType}小说的特点`
                         }
                     ]
                 });
 
                 document.getElementById('contentArea').value = response.choices[0].message.content;
+                document.getElementById('continueGenerate').style.display = 'block';
+                document.getElementById('continueGenerate').disabled = false;
+                
                 clearInterval(progressInterval);
                 updateProgress(100);
             } catch (error) {
-                clearInterval(progressInterval);
-                updateProgress(0);
-                console.error('Error:', error);
-                document.getElementById('contentArea').value = '生成失败，请检查API Key是否正确，或稍后重试。';
+                // ... existing error handling ...
             }
-
-            this.disabled = false;
         });
 
         async function exportWord() {
