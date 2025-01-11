@@ -66,13 +66,18 @@
             color: #555;
         }
         optgroup {
-            font-weight: 700 !important;
+            font-weight: 900 !important;
             color: #0d6efd !important;
-            font-size: 1.2em;
+            font-size: 1.2em !important;
             text-transform: uppercase;
             padding: 8px 0;
             border-bottom: 2px solid #0d6efd;
             margin-bottom: 8px;
+            background-color: #f8f9fa;
+        }
+        .form-select optgroup {
+            font-weight: 900 !important;
+            color: #0d6efd !important;
         }
         option {
             font-size: 1em;
@@ -240,6 +245,21 @@
                             <button class="btn btn-primary" id="saveOutline" disabled>保存大纲修改</button>
                             <button class="btn btn-secondary" id="resetOutline">重置修改</button>
                             <button class="btn btn-success" id="generateChapter" style="display: none;">生成章节内容</button>
+                        </div>
+                        
+                        <div class="outline-modification mb-3" style="background: #f8f9fa; padding: 1rem; border-radius: 10px;">
+                            <h6 class="mb-2">人工干涉</h6>
+                            <div class="input-group mb-2">
+                                <input type="text" class="form-control" id="modificationInput" placeholder="输入修改建议，例如：'增加更多人物冲突'、'加强故事背景'">
+                                <button class="btn btn-warning" onclick="applyModification()">应用修改</button>
+                            </div>
+                            <div class="suggestion-tags">
+                                <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="selectSuggestion(this)">增加人物冲突</button>
+                                <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="selectSuggestion(this)">加强故事背景</button>
+                                <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="selectSuggestion(this)">调整情节节奏</button>
+                                <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="selectSuggestion(this)">增加情感描写</button>
+                                <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="selectSuggestion(this)">添加悬疑元素</button>
+                            </div>
                         </div>
                         
                         <div class="chapter-select" style="display: none; margin-bottom: 1rem;">
@@ -521,6 +541,65 @@ ${originalOutline}
             navigator.clipboard.writeText(content)
                 .then(() => alert('内容已复制到剪贴板！'))
                 .catch(err => alert('复制失败：' + err));
+        }
+
+        function selectSuggestion(button) {
+            document.getElementById('modificationInput').value = button.textContent;
+        }
+
+        async function applyModification() {
+            const suggestion = document.getElementById('modificationInput').value;
+            if (!suggestion) {
+                alert('请输入修改建议');
+                return;
+            }
+
+            const apiKey = document.getElementById('apiKey').value;
+            if (!apiKey) {
+                alert('请输入API Key');
+                return;
+            }
+
+            const currentContent = document.getElementById('contentArea').value;
+            if (!currentContent) {
+                alert('请先生成内容再进行修改');
+                return;
+            }
+
+            document.getElementById('contentArea').value = '正在根据建议修改内容，请稍候...';
+
+            try {
+                const response = await callMoonshotAPI(apiKey, {
+                    messages: [
+                        {
+                            role: "system",
+                            content: `你是一个专业的小说编辑，需要根据用户的建议对内容进行修改和优化。请保持原有内容的基本框架，在此基础上进行优化。`
+                        },
+                        {
+                            role: "user",
+                            content: `请根据以下建议修改内容：
+${suggestion}
+
+原内容：
+${currentContent}
+
+要求：
+1. 保持原有内容的基本框架和主要情节
+2. 根据修改建议进行优化和调整
+3. 确保修改后的内容更加吸引人
+4. 保持文风的一致性`
+                        }
+                    ]
+                });
+
+                document.getElementById('contentArea').value = response.choices[0].message.content;
+                isOutlineModified = true;
+                document.getElementById('saveOutline').disabled = false;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('contentArea').value = currentContent;
+                alert('修改失败，请稍后重试');
+            }
         }
     </script>
 </body>
