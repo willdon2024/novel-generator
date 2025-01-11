@@ -368,7 +368,7 @@
         let isOutlineModified = false;
         let currentChapter = 0;
         let isGeneratingOutline = false;
-        let outlineStages = ['背景设定', '人物介绍', '序章', '前期章节', '中期章节', '后期章节', '结局章节'];
+        let outlineStages = ['背景设定', '人物介绍', '第一章到第五章', '第六章到第十章', '第十一章到第十五章', '第十六章到第二十章', '结局章节'];
         let currentStage = 0;
 
         function saveApiKey(apiKey) {
@@ -549,10 +549,10 @@
             
             let prompt;
             if (isGeneratingOutline) {
-                prompt = `基于已有的内容继续生成大纲的${outlineStages[currentStage]}部分：\n\n${currentContent}\n\n请继续完善大纲，确保：\n1. 与已有内容保持连贯\n2. 符合${novelType}小说的特点\n3. 按照大纲规范格式编写`;
+                prompt = `基于已有的内容继续生成大纲的${outlineStages[currentStage]}部分：\n\n${currentContent}\n\n请继续完善大纲，确保：\n1. 与已有内容保持连贯\n2. 符合${novelType}小说的特点\n3. 每章节标题后附带100-200字的内容梗概\n4. 每个阶段生成5章，保持情节递进\n5. 结局章节包含完整的结局安排\n6. 注重情节发展的合理性\n7. 保持人物性格的一致性\n8. 适当安排环境描写和心理描写的篇幅`;
                 currentStage++;
             } else {
-                prompt = `基于大纲继续生成第${currentChapter + 1}章的内容：\n\n${currentContent}\n\n要求：\n1. 与前文保持连贯\n2. 细致描写场景和人物\n3. 控制字数在4000-6000字之间`;
+                prompt = `基于大纲继续生成第${currentChapter + 1}章的内容：\n\n${currentContent}\n\n要求：\n1. 与前文保持连贯\n2. 细致描写场景和人物\n3. 控制字数在4000-6000字之间\n4. 注重情节发展的合理性\n5. 保持人物性格的一致性\n6. 适当运用环境描写和心理描写\n7. 符合${novelType}小说的特点`;
                 currentChapter++;
             }
             
@@ -606,7 +606,7 @@
                         },
                         {
                             role: "user",
-                            content: `基于以下大纲，生成第${currentChapter + 1}章的具体内容：\n\n${originalOutline}\n\n要求：\n1. 详细描写场景和人物\n2. 字数控制在4000-6000字之间\n3. 符合${novelType}小说的特点`
+                            content: `基于以下大纲，生成第${currentChapter + 1}章的具体内容：\n\n${originalOutline}\n\n要求：\n1. 详细描写场景和人物\n2. 字数控制在4000-6000字之间\n3. 符合${novelType}小说的特点\n4. 注重情节发展的合理性\n5. 保持人物性格的一致性\n6. 适当运用环境描写和心理描写\n7. 与前文保持连贯\n8. 合理安排情节节奏`
                         }
                     ]
                 });
