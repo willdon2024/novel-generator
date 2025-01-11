@@ -12,7 +12,7 @@
             padding: 20px 0;
         }
         .container {
-            max-width: 1200px;
+            max-width: 1000px;
             padding: 2rem;
         }
         .card {
@@ -92,7 +92,7 @@
         }
         .content-area {
             width: 100%;
-            min-height: 400px;
+            min-height: 600px;
             padding: 1rem;
             border: 1px solid #dee2e6;
             border-radius: 10px;
@@ -162,127 +162,146 @@
             margin-bottom: 1.5rem;
             font-size: 1.25rem;
         }
+        .progress {
+            height: 10px;
+            margin: 1rem 0;
+            display: none;
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+        .api-key-group {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+        .api-key-group .btn {
+            white-space: nowrap;
+            height: 42px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>AI小说生成器</h1>
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-body">
-                        <form id="novelForm">
-                            <div class="mb-3">
-                                <label for="apiKey" class="form-label">Moonshot API Key</label>
-                                <input type="password" class="form-control" id="apiKey" required>
-                                <small class="text-muted">请输入你的 Moonshot API Key</small>
-                            </div>
-                            <div class="mb-3">
-                                <label for="title" class="form-label">小说标题</label>
-                                <input type="text" class="form-control" id="title" required placeholder="请输入小说标题">
-                            </div>
-                            <div class="mb-3">
-                                <label for="novelType" class="form-label">小说类型</label>
-                                <select class="form-select" id="novelType" required>
-                                    <option value="" disabled selected>请选择小说类型</option>
-                                    <optgroup label="玄幻仙侠">
-                                        <option value="玄幻修真">玄幻修真</option>
-                                        <option value="武侠江湖">武侠江湖</option>
-                                        <option value="仙侠修仙">仙侠修仙</option>
-                                        <option value="东方奇幻">东方奇幻</option>
-                                    </optgroup>
-                                    <optgroup label="现代都市">
-                                        <option value="都市生活">都市生活</option>
-                                        <option value="职场商战">职场商战</option>
-                                        <option value="青春校园">青春校园</option>
-                                        <option value="现代言情">现代言情</option>
-                                    </optgroup>
-                                    <optgroup label="悬疑烧脑">
-                                        <option value="悬疑推理">悬疑推理</option>
-                                        <option value="惊悚恐怖">惊悚恐怖</option>
-                                        <option value="冒险探险">冒险探险</option>
-                                        <option value="灵异神怪">灵异神怪</option>
-                                    </optgroup>
-                                    <optgroup label="科幻未来">
-                                        <option value="硬核科幻">硬核科幻</option>
-                                        <option value="未来世界">未来世界</option>
-                                        <option value="游戏竞技">游戏竞技</option>
-                                        <option value="机甲战争">机甲战争</option>
-                                    </optgroup>
-                                    <optgroup label="历史军事">
-                                        <option value="历史架空">历史架空</option>
-                                        <option value="军事战争">军事战争</option>
-                                        <option value="谍战特工">谍战特工</option>
-                                        <option value="历史穿越">历史穿越</option>
-                                    </optgroup>
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-primary" id="generateBtn">
-                                <span class="d-flex align-items-center justify-content-center">
-                                    <span>开始生成</span>
-                                </span>
-                            </button>
-                        </form>
+        <div class="card mb-4">
+            <div class="card-body">
+                <form id="novelForm">
+                    <div class="mb-3">
+                        <label for="apiKey" class="form-label">Moonshot API Key</label>
+                        <div class="api-key-group">
+                            <input type="password" class="form-control" id="apiKey" required>
+                            <button type="button" class="btn btn-primary" id="confirmApiKey">确认</button>
+                        </div>
+                        <small class="text-muted">请输入你的 Moonshot API Key</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="title" class="form-label">小说标题</label>
+                        <input type="text" class="form-control" id="title" required placeholder="请输入小说标题">
+                    </div>
+                    <div class="mb-3">
+                        <label for="novelType" class="form-label">小说类型</label>
+                        <select class="form-select" id="novelType" required>
+                            <option value="" disabled selected>请选择小说类型</option>
+                            <optgroup label="玄幻仙侠">
+                                <option value="玄幻修真">玄幻修真</option>
+                                <option value="武侠江湖">武侠江湖</option>
+                                <option value="仙侠修仙">仙侠修仙</option>
+                                <option value="东方奇幻">东方奇幻</option>
+                            </optgroup>
+                            <optgroup label="现代都市">
+                                <option value="都市生活">都市生活</option>
+                                <option value="职场商战">职场商战</option>
+                                <option value="青春校园">青春校园</option>
+                                <option value="现代言情">现代言情</option>
+                            </optgroup>
+                            <optgroup label="悬疑烧脑">
+                                <option value="悬疑推理">悬疑推理</option>
+                                <option value="惊悚恐怖">惊悚恐怖</option>
+                                <option value="冒险探险">冒险探险</option>
+                                <option value="灵异神怪">灵异神怪</option>
+                            </optgroup>
+                            <optgroup label="科幻未来">
+                                <option value="硬核科幻">硬核科幻</option>
+                                <option value="未来世界">未来世界</option>
+                                <option value="游戏竞技">游戏竞技</option>
+                                <option value="机甲战争">机甲战争</option>
+                            </optgroup>
+                            <optgroup label="历史军事">
+                                <option value="历史架空">历史架空</option>
+                                <option value="军事战争">军事战争</option>
+                                <option value="谍战特工">谍战特工</option>
+                                <option value="历史穿越">历史穿越</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="generateBtn">
+                        <span class="d-flex align-items-center justify-content-center">
+                            <span>开始生成</span>
+                        </span>
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">内容编辑</h5>
+                
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                </div>
+                
+                <div class="mode-switch">
+                    <div class="btn-group w-100">
+                        <input type="radio" class="btn-check" name="mode" id="outlineMode" checked>
+                        <label class="btn btn-outline-primary" for="outlineMode">大纲模式</label>
+                        
+                        <input type="radio" class="btn-check" name="mode" id="contentMode">
+                        <label class="btn btn-outline-primary" for="contentMode">章节内容模式</label>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">内容编辑</h5>
-                        
-                        <div class="mode-switch">
-                            <div class="btn-group w-100">
-                                <input type="radio" class="btn-check" name="mode" id="outlineMode" checked>
-                                <label class="btn btn-outline-primary" for="outlineMode">大纲模式</label>
-                                
-                                <input type="radio" class="btn-check" name="mode" id="contentMode">
-                                <label class="btn btn-outline-primary" for="contentMode">章节内容模式</label>
-                            </div>
-                        </div>
-                        
-                        <div class="edit-tools">
-                            <button class="btn btn-primary" id="saveOutline" disabled>保存大纲修改</button>
-                            <button class="btn btn-secondary" id="resetOutline">重置修改</button>
-                            <button class="btn btn-success" id="generateChapter" style="display: none;">生成章节内容</button>
-                        </div>
-                        
-                        <div class="outline-modification mb-3" style="background: #f8f9fa; padding: 1rem; border-radius: 10px;">
-                            <h6 class="mb-2">人工干涉</h6>
-                            <div class="input-group mb-2">
-                                <input type="text" class="form-control" id="modificationInput" placeholder="输入修改建议，例如：'增加更多人物冲突'、'加强故事背景'">
-                                <button class="btn btn-warning" onclick="applyModification()">应用修改</button>
-                            </div>
-                            <div class="suggestion-tags">
-                                <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="selectSuggestion(this)">增加人物冲突</button>
-                                <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="selectSuggestion(this)">加强故事背景</button>
-                                <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="selectSuggestion(this)">调整情节节奏</button>
-                                <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="selectSuggestion(this)">增加情感描写</button>
-                                <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="selectSuggestion(this)">添加悬疑元素</button>
-                            </div>
-                        </div>
-                        
-                        <div class="chapter-select" style="display: none; margin-bottom: 1rem;">
-                            <label for="chapterSelect" class="form-label">选择章节</label>
-                            <select class="form-select" id="chapterSelect">
-                                <option value="" disabled selected>请选择要生成的章节</option>
-                            </select>
-                        </div>
-                        
-                        <textarea class="content-area" id="contentArea" placeholder="这里将显示生成的内容..."></textarea>
-                        
-                        <div class="export-tools">
-                            <button class="btn btn-outline-primary" onclick="exportWord()">
-                                导出 Word
-                            </button>
-                            <button class="btn btn-outline-primary" onclick="exportText()">
-                                导出 Text
-                            </button>
-                            <button class="btn btn-outline-primary" onclick="copyContent()">
-                                复制内容
-                            </button>
-                        </div>
+                
+                <div class="edit-tools">
+                    <button class="btn btn-primary" id="saveOutline" disabled>保存大纲修改</button>
+                    <button class="btn btn-secondary" id="resetOutline">重置修改</button>
+                    <button class="btn btn-success" id="generateChapter" style="display: none;">生成章节内容</button>
+                </div>
+                
+                <div class="outline-modification mb-3" style="background: #f8f9fa; padding: 1rem; border-radius: 10px;">
+                    <h6 class="mb-2">人工干涉</h6>
+                    <div class="input-group mb-2">
+                        <input type="text" class="form-control" id="modificationInput" placeholder="输入修改建议，例如：'增加更多人物冲突'、'加强故事背景'">
+                        <button class="btn btn-primary" onclick="applyModification()">应用修改</button>
                     </div>
+                    <div class="suggestion-tags">
+                        <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="selectSuggestion(this)">增加人物冲突</button>
+                        <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="selectSuggestion(this)">加强故事背景</button>
+                        <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="selectSuggestion(this)">调整情节节奏</button>
+                        <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="selectSuggestion(this)">增加情感描写</button>
+                        <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="selectSuggestion(this)">添加悬疑元素</button>
+                    </div>
+                </div>
+                
+                <div class="chapter-select" style="display: none; margin-bottom: 1rem;">
+                    <label for="chapterSelect" class="form-label">选择章节</label>
+                    <select class="form-select" id="chapterSelect">
+                        <option value="" disabled selected>请选择要生成的章节</option>
+                    </select>
+                </div>
+                
+                <textarea class="content-area" id="contentArea" placeholder="这里将显示生成的内容..."></textarea>
+                
+                <div class="export-tools">
+                    <button class="btn btn-outline-primary" onclick="exportWord()">
+                        导出 Word
+                    </button>
+                    <button class="btn btn-outline-primary" onclick="exportText()">
+                        导出 Text
+                    </button>
+                    <button class="btn btn-outline-primary" onclick="copyContent()">
+                        复制内容
+                    </button>
                 </div>
             </div>
         </div>
@@ -311,6 +330,28 @@
 
         document.addEventListener('DOMContentLoaded', loadApiKey);
 
+        function updateProgress(progress) {
+            const progressBar = document.querySelector('.progress-bar');
+            const progressDiv = document.querySelector('.progress');
+            progressDiv.style.display = 'flex';
+            progressBar.style.width = `${progress}%`;
+            if (progress >= 100) {
+                setTimeout(() => {
+                    progressDiv.style.display = 'none';
+                }, 1000);
+            }
+        }
+
+        document.getElementById('confirmApiKey').addEventListener('click', function() {
+            const apiKey = document.getElementById('apiKey').value;
+            if (apiKey) {
+                saveApiKey(apiKey);
+                alert('API Key 已保存！');
+            } else {
+                alert('请输入 API Key');
+            }
+        });
+
         document.getElementById('novelForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -323,10 +364,17 @@
                 return;
             }
 
-            saveApiKey(apiKey);
-            
             document.getElementById('generateBtn').disabled = true;
             document.getElementById('contentArea').value = '正在生成中，请稍候...';
+            
+            // 启动进度条
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 5;
+                if (progress <= 90) {
+                    updateProgress(progress);
+                }
+            }, 1000);
             
             try {
                 const outlineResponse = await callMoonshotAPI(apiKey, {
@@ -356,7 +404,11 @@
                 isOutlineModified = false;
                 document.getElementById('saveOutline').disabled = true;
                 
+                clearInterval(progressInterval);
+                updateProgress(100);
             } catch (error) {
+                clearInterval(progressInterval);
+                updateProgress(0);
                 console.error('Error:', error);
                 document.getElementById('contentArea').value = '生成失败，请检查API Key是否正确，或稍后重试。';
             }
@@ -457,6 +509,15 @@
             this.disabled = true;
             document.getElementById('contentArea').value = '正在生成章节内容，请稍候...';
 
+            // 启动进度条
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 5;
+                if (progress <= 90) {
+                    updateProgress(progress);
+                }
+            }, 1000);
+
             try {
                 const chapterTitle = chapterSelect.options[chapterSelect.selectedIndex].text;
                 const response = await callMoonshotAPI(apiKey, {
@@ -486,7 +547,11 @@ ${originalOutline}
                 });
 
                 document.getElementById('contentArea').value = response.choices[0].message.content;
+                clearInterval(progressInterval);
+                updateProgress(100);
             } catch (error) {
+                clearInterval(progressInterval);
+                updateProgress(0);
                 console.error('Error:', error);
                 document.getElementById('contentArea').value = '生成失败，请检查API Key是否正确，或稍后重试。';
             }
