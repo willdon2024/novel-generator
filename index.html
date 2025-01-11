@@ -687,8 +687,9 @@ ${currentContent}
 
         // 添加授权码验证系统
         const validAuthCodes = {
-            'AUTH001-2024': { expiry: '2024-12-31', user: 'user1' },
-            'AUTH002-2024': { expiry: '2024-12-31', user: 'user2' }
+            'AUTH001-2024': { user: 'user1', activated: null },
+            'AUTH002-2024': { user: 'user2', activated: null },
+            'AUTH003-2024': { user: 'user3', activated: null }
             // 可以添加更多授权码
         };
 
@@ -705,10 +706,25 @@ ${currentContent}
                 return;
             }
 
+            // 检查是否已激活
+            let activationDate = localStorage.getItem(`activation_${authCode}`);
+            if (!activationDate) {
+                // 首次激活，设置激活日期
+                activationDate = new Date().toISOString();
+                localStorage.setItem(`activation_${authCode}`, activationDate);
+            }
+
+            // 计算过期日期（激活日期 + 1年）
+            const activated = new Date(activationDate);
+            const expiry = new Date(activated);
+            expiry.setFullYear(expiry.getFullYear() + 1);
+            
             const now = new Date();
-            const expiry = new Date(authInfo.expiry);
             if (now > expiry) {
                 alert('授权码已过期');
+                localStorage.removeItem(`activation_${authCode}`);
+                localStorage.removeItem('novelGenAuthCode');
+                localStorage.removeItem('novelGenUser');
                 return;
             }
 
@@ -719,21 +735,30 @@ ${currentContent}
             // 显示主要内容
             document.getElementById('mainContent').style.display = 'block';
             
-            alert('授权验证成功！');
+            // 计算剩余天数
+            const daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
+            alert(`授权验证成功！\n授权有效期至：${expiry.toLocaleDateString()}\n剩余天数：${daysLeft}天`);
         });
 
         // 页面加载时检查授权
         document.addEventListener('DOMContentLoaded', function() {
             const savedAuthCode = localStorage.getItem('novelGenAuthCode');
             if (savedAuthCode && validAuthCodes[savedAuthCode]) {
-                const now = new Date();
-                const expiry = new Date(validAuthCodes[savedAuthCode].expiry);
-                if (now <= expiry) {
-                    document.getElementById('authCode').value = savedAuthCode;
-                    document.getElementById('mainContent').style.display = 'block';
-                } else {
-                    localStorage.removeItem('novelGenAuthCode');
-                    localStorage.removeItem('novelGenUser');
+                const activationDate = localStorage.getItem(`activation_${savedAuthCode}`);
+                if (activationDate) {
+                    const activated = new Date(activationDate);
+                    const expiry = new Date(activated);
+                    expiry.setFullYear(expiry.getFullYear() + 1);
+                    
+                    const now = new Date();
+                    if (now <= expiry) {
+                        document.getElementById('authCode').value = savedAuthCode;
+                        document.getElementById('mainContent').style.display = 'block';
+                    } else {
+                        localStorage.removeItem(`activation_${savedAuthCode}`);
+                        localStorage.removeItem('novelGenAuthCode');
+                        localStorage.removeItem('novelGenUser');
+                    }
                 }
             }
             loadApiKey();
