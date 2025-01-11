@@ -23,11 +23,13 @@ class NovelWriter:
 要求：
 1. 详细的故事背景设定（至少500字）
 2. 主要人物介绍（包括性格特点和人物关系，每个主要人物至少200字）
-3. 列出3个重要的故事转折点
+3. 列出3个重要的故事转折点，并说明这些转折点分别发生在第几章
+4. 【重要】故事结构按照"序章-发展-高潮-结局"四个阶段展开，每个阶段3-4章
 格式：
 - 故事背景：
 - 主要人物：
-- 重要转折点："""
+- 重要转折点：
+- 故事结构规划："""
 
             background = openai.ChatCompletion.create(
                 model="moonshot-v1-8k",
@@ -42,15 +44,21 @@ class NovelWriter:
             # 等待一会以遵守RPM限制
             time.sleep(20)
 
-            # 第二步：生成章节大纲（前半部分：1-8章）
-            outline_first_prompt = f"""请为{genre}小说《{title}》创作第1章到第8章的详细大纲。
+            # 第二步：生成章节大纲第一部分（序章和发展：1-6章）
+            outline_first_prompt = f"""请为{genre}小说《{title}》创作第1章到第6章的详细大纲。这是小说的序章和发展阶段。
+背景信息：
+{background}
+
 要求：
-1. 每章4-5节
+1. 必须生成1-6章的内容，每章4-5节
 2. 每节提供300-500字的详细内容概要
-3. 确保情节连贯
-4. 按照以下格式输出：
-第X章 章节名
-  第X节 节标题：（详细概要）"""
+3. 按照以下格式输出：
+第1章 序章名
+  第1节 节标题：（详细概要）
+  第2节 节标题：（详细概要）
+  ...（确保每章至少4节）
+第2章 章节名
+  ...（以此类推直到第6章）"""
 
             outline_first = openai.ChatCompletion.create(
                 model="moonshot-v1-8k",
@@ -65,15 +73,22 @@ class NovelWriter:
             # 等待一会以遵守RPM限制
             time.sleep(20)
 
-            # 第三步：生成章节大纲（后半部分：9-15章）
-            outline_second_prompt = f"""请为{genre}小说《{title}》创作第9章到第15章的详细大纲。
+            # 第三步：生成章节大纲第二部分（高潮：7-12章）
+            outline_second_prompt = f"""请为{genre}小说《{title}》创作第7章到第12章的详细大纲。这是小说的高潮和高潮延续阶段。
+已有内容：
+{outline_first}
+
 要求：
-1. 每章4-5节
+1. 必须生成7-12章的内容，每章4-5节
 2. 每节提供300-500字的详细内容概要
-3. 确保情节连贯，并与前8章的内容衔接
+3. 确保情节连贯，并与前6章的内容衔接
 4. 按照以下格式输出：
-第X章 章节名
-  第X节 节标题：（详细概要）"""
+第7章 章节名
+  第1节 节标题：（详细概要）
+  第2节 节标题：（详细概要）
+  ...（确保每章至少4节）
+第8章 章节名
+  ...（以此类推直到第12章）"""
 
             outline_second = openai.ChatCompletion.create(
                 model="moonshot-v1-8k",
@@ -85,11 +100,52 @@ class NovelWriter:
                 max_tokens=2000
             ).choices[0].message.content
 
+            # 等待一会以遵守RPM限制
+            time.sleep(20)
+
+            # 第四步：生成章节大纲第三部分（结局：13-15章）
+            outline_third_prompt = f"""请为{genre}小说《{title}》创作第13章到第15章的详细大纲。这是小说的结局阶段。
+前文概要：
+{outline_second}
+
+要求：
+1. 必须生成13-15章的内容，每章4-5节
+2. 每节提供300-500字的详细内容概要
+3. 确保完整的故事闭环，所有伏笔和情节都得到合理的解决
+4. 按照以下格式输出：
+第13章 章节名
+  第1节 节标题：（详细概要）
+  第2节 节标题：（详细概要）
+  ...（确保每章至少4节）
+第14章 章节名
+  ...（以此类推直到第15章）"""
+
+            outline_third = openai.ChatCompletion.create(
+                model="moonshot-v1-8k",
+                messages=[
+                    {"role": "system", "content": "你是一个专业的小说策划，专注于创作详细的章节大纲。"},
+                    {"role": "user", "content": outline_third_prompt}
+                ],
+                temperature=0.7,
+                max_tokens=2000
+            ).choices[0].message.content
+
             # 组合所有内容
-            complete_outline = f"{background}\n\n章节大纲：\n\n{outline_first}\n\n{outline_second}"
+            complete_outline = f"""# 小说整体规划
+{background}
+
+# 详细章节大纲
+## 第一部分：序章与发展（第1-6章）
+{outline_first}
+
+## 第二部分：高潮发展（第7-12章）
+{outline_second}
+
+## 第三部分：结局篇章（第13-15章）
+{outline_third}"""
             
             # 检查是否生成了足够的章节
-            if "第12章" not in complete_outline:
+            if "第12章" not in complete_outline or "第15章" not in complete_outline:
                 # 如果章节不足，返回错误信息
                 return "生成的大纲不完整，请重试。建议：1. 尝试缩短标题 2. 简化人物设定 3. 分多次生成"
             
