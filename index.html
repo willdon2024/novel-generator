@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 小说生成器</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/7.8.2/docx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin-top: 2rem;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .chapter-tree {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .chapter-item {
+            cursor: pointer;
+            padding: 8px;
+            margin: 4px 0;
+            border-radius: 4px;
+        }
+        .chapter-item:hover {
+            background-color: #f0f0f0;
+        }
+        .chapter-item.active {
+            background-color: #e3f2fd;
+        }
+        .content-area {
+            min-height: 400px;
+            max-height: 600px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 1000;
+        }
+        .loading-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        .github-corner {
+            position: fixed;
+            top: 0;
+            right: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- GitHub Corner -->
+    <a href="https://github.com/willdon2024/novel-generator" class="github-corner" aria-label="View source on GitHub">
+        <svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true">
+            <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path>
+            <path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path>
+            <path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path>
+        </svg>
+    </a>
+
+    <div class="container">
+        <h1 class="text-center mb-4">AI 小说生成器</h1>
+        
+        <!-- API Key 设置 -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="input-group">
+                    <input type="password" id="apiKey" class="form-control" placeholder="请输入你的 Moonshot AI API Key">
+                    <button class="btn btn-primary" onclick="setApiKey()">设置 API Key</button>
+                </div>
+                <small class="text-muted mt-2">
+                    API Key 仅保存在浏览器中，刷新页面后需要重新输入。
+                    <a href="https://platform.moonshot.cn/" target="_blank">获取 API Key</a>
+                </small>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- 左侧面板 -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">小说信息</h5>
+                        <div class="mb-3">
+                            <label class="form-label">小说类型</label>
+                            <select class="form-select mb-3" id="novelType">
+                                <option value="urban">都市言情</option>
+                                <option value="yuri">百合小说</option>
+                                <option value="bl">耽美小说</option>
+                                <option value="timeTravel">穿越历史</option>
+                                <option value="romance">纯爱小说</option>
+                                <option value="fantasy">玄幻修真</option>
+                                <option value="scifi">科幻小说</option>
+                                <option value="mystery">悬疑推理</option>
+                            </select>
+                            <input type="text" id="novelTitle" class="form-control" placeholder="请输入小说标题">
+                        </div>
+                        <button class="btn btn-primary w-100 mb-3" onclick="generateOutline()">生成大纲</button>
+                        
+                        <h5 class="card-title mt-4">章节管理</h5>
+                        <div class="chapter-tree" id="chapterTree"></div>
+                        
+                        <div class="btn-group w-100 mt-3">
+                            <button class="btn btn-outline-primary" onclick="addChapter()">添加章</button>
+                            <button class="btn btn-outline-primary" onclick="addSection()">添加节</button>
+                            <button class="btn btn-outline-danger" onclick="deleteItem()">删除</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 右侧面板 -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="btn-group mb-3">
+                            <input type="radio" class="btn-check" name="contentType" id="outlineRadio" value="outline" checked>
+                            <label class="btn btn-outline-primary" for="outlineRadio">大纲</label>
+                            
+                            <input type="radio" class="btn-check" name="contentType" id="contentRadio" value="content">
+                            <label class="btn btn-outline-primary" for="contentRadio">章节内容</label>
+                        </div>
+                        
+                        <div class="content-area border rounded p-3 mb-3" id="contentArea"></div>
+                        
+                        <!-- 生成按钮和导出按钮 -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <button class="btn btn-primary" onclick="generateContent()">生成选中章节内容</button>
+                            <div>
+                                <button class="btn btn-outline-secondary me-2" onclick="copyContent()">复制内容</button>
+                                <button class="btn btn-outline-success me-2" onclick="exportToWord()">导出Word</button>
+                                <button class="btn btn-outline-info" onclick="exportToTxt()">导出TXT</button>
+                            </div>
+                        </div>
+
+                        <!-- 人工干预功能 -->
+                        <div class="card mt-3">
+                            <div class="card-body">
+                                <h6 class="card-title">人工干预</h6>
+                                <div class="input-group">
+                                    <input type="text" id="customPrompt" class="form-control" placeholder="输入修改建议，例如：'让主角更勇敢一些'、'增加更多历史细节'">
+                                    <button class="btn btn-warning" onclick="regenerateWithPrompt()">重新生成</button>
+                                </div>
+                                <small class="text-muted mt-2">
+                                    提示：你可以描述想要修改的具体方向，比如人物性格、情节发展、细节描写等。系统会在保持故事连贯性的同时，按照你的要求重新生成内容。
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载动画 -->
+    <div class="loading" id="loading">
+        <div class="loading-content">
+            <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p id="loadingText">正在生成内容，请稍候...</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentOutline = '';
+        let chapters = [];
+        let selectedItem = null;
+        let apiClient = null;
+
+        // 添加新变量
+        let novelContent = {
+            title: '',
+            outline: '',
+            chapters: []
+        };
+
+        // 设置 API Key
+        async function setApiKey() {
+            const apiKey = document.getElementById('apiKey').value;
+            if (!apiKey) {
+                alert('请输入 API Key');
+                return;
+            }
+
+            try {
+                apiClient = axios.create({
+                    baseURL: 'https://api.moonshot.cn/v1',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                localStorage.setItem('apiKey', apiKey);
+                alert('API Key 设置成功！');
+                loadSavedContent(); // 加载保存的内容
+            } catch (error) {
+                alert('API Key 设置失败：' + error.message);
+            }
+        }
+
+        // 检查是否有保存的 API Key
+        const savedApiKey = localStorage.getItem('apiKey');
+        if (savedApiKey) {
+            document.getElementById('apiKey').value = savedApiKey;
+            setApiKey();
+        }
+
+        // 获取不同类型小说的系统提示词
+        function getSystemPrompt(type, isOutline = true) {
+            const prompts = {
+                urban: {
+                    outline: `你是一个专业的都市言情小说策划。请根据小说标题，创作一个详细的故事大纲。
+要求：
+1. 提供现代都市背景设定
+2. 主要人物性格特点和社会身份介绍
+3. 分为3-5章，每章2-3节
+4. 每一节提供简短的内容概要
+5. 情节要包含事业与爱情的平衡
+6. 突出人物情感冲突和成长`,
+                    content: `你是一个专业的都市言情小说作家。请根据大纲和章节信息，创作详细的章节内容。
+要求：
+1. 内容长度2000-3000字
+2. 细腻的情感描写
+3. 生动的对话和内心独白
+4. 都市生活场景细节
+5. 人物性格鲜明
+6. 感情线索自然发展`
+                },
+                yuri: {
+                    outline: `你是一个专业的百合小说策划。请根据小说标题，创作一个详细的故事大纲。
+要求：
+1. 提供故事背景设定
+2. 女主角们的性格特点和关系定位
+3. 分为3-5章，每章2-3节
+4. 每一节提供简短的内容概要
+5. 情节要细腻委婉
+6. 感情发展要循序渐进`,
+                    content: `你是一个专业的百合小说作家。请根据大纲和章节信息，创作详细的章节内容。
+要求：
+1. 内容长度2000-3000字
+2. 优美唯美的文字风格
+3. 细腻的心理描写
+4. 委婉的感情表达
+5. 自然的情节发展
+6. 真挚的情感刻画`
+                },
+                bl: {
+                    outline: `你是一个专业的耽美小说策划。请根据小说标题，创作一个详细的故事大纲。
+要求：
+1. 提供故事背景设定
+2. 主角们的性格特点和关系定位
+3. 分为3-5章，每章2-3节
+4. 每一节提供简短的内容概要
+5. 情节要合理自然
+6. 感情发展要有层次`,
+                    content: `你是一个专业的耽美小说作家。请根据大纲和章节信息，创作详细的章节内容。
+要求：
+1. 内容长度2000-3000字
+2. 细腻的感情描写
+3. 人物性格鲜明
+4. 自然的情节发展
+5. 真挚的情感表达
+6. 合理的关系推进`
+                },
+                timeTravel: {
+                    outline: `你是一个专业的穿越历史小说策划。请根据小说标题，创作一个详细的故事大纲。
+要求：
+1. 提供历史背景设定
+2. 主要人物介绍和身份设定
+3. 分为3-5章，每章2-3节
+4. 每一节提供简短的内容概要
+5. 确保历史细节准确
+6. 体现时空穿越的独特性`,
+                    content: `你是一个专业的穿越历史小说作家。请根据大纲和章节信息，创作详细的章节内容。
+要求：
+1. 内容长度2000-3000字
+2. 丰富的历史细节
+3. 合理的穿越设定
+4. 人物对话符合时代
+5. 情节发展合理
+6. 历史背景真实`
+                },
+                romance: {
+                    outline: `你是一个专业的纯爱小说策划。请根据小说标题，创作一个详细的故事大纲。
+要求：
+1. 提供故事背景设定
+2. 主角性格特点和关系介绍
+3. 分为3-5章，每章2-3节
+4. 每一节提供简短的内容概要
+5. 突出真挚的感情
+6. 情节要温暖治愈`,
+                    content: `你是一个专业的纯爱小说作家。请根据大纲和章节信息，创作详细的章节内容。
+要求：
+1. 内容长度2000-3000字
+2. 温暖治愈的风格
+3. 细腻的情感描写
+4. 真挚的感情表达
+5. 自然的情节发展
+6. 美好的情感升华`
+                },
+                fantasy: {
+                    outline: `你是一个专业的玄幻修真小说策划。请根据小说标题，创作一个详细的故事大纲。
+要求：
+1. 提供修真世界观设定
+2. 主角天赋和修炼体系介绍
+3. 分为3-5章，每章2-3节
+4. 每一节提供简短的内容概要
+5. 修炼体系要完整
+6. 情节要跌宕起伏`,
+                    content: `你是一个专业的玄幻修真小说作家。请根据大纲和章节信息，创作详细的章节内容。
+要求：
+1. 内容长度2000-3000字
+2. 玄幻元素要合理
+3. 修炼描写要专业
+4. 打斗场景要精彩
+5. 情节要跌宕起伏
+6. 人物要有特色`
+                },
+                scifi: {
+                    outline: `你是一个专业的科幻小说策划。请根据小说标题，创作一个详细的故事大纲。
+要求：
+1. 提供未来科技背景设定
+2. 主要人物和科技设定介绍
+3. 分为3-5章，每章2-3节
+4. 每一节提供简短的内容概要
+5. 科技设定要合理
+6. 体现人性思考`,
+                    content: `你是一个专业的科幻小说作家。请根据大纲和章节信息，创作详细的章节内容。
+要求：
+1. 内容长度2000-3000字
+2. 科技描写要专业
+3. 未来场景要真实
+4. 人性思考要深刻
+5. 情节要有想象力
+6. 科技细节要准确`
+                },
+                mystery: {
+                    outline: `你是一个专业的悬疑推理小说策划。请根据小说标题，创作一个详细的故事大纲。
+要求：
+1. 提供案件背景设定
+2. 主要人物和案件关系介绍
+3. 分为3-5章，每章2-3节
+4. 每一节提供简短的内容概要
+5. 案件逻辑要严密
+6. 线索要环环相扣`,
+                    content: `你是一个专业的悬疑推理小说作家。请根据大纲和章节信息，创作详细的章节内容。
+要求：
+1. 内容长度2000-3000字
+2. 推理过程要合理
+3. 线索要清晰
+4. 悬疑氛围要到位
+5. 情节要有张力
+6. 结局要有惊喜`
+                }
+            };
+            
+            const type_key = document.getElementById('novelType').value;
+            return prompts[type_key][isOutline ? 'outline' : 'content'];
+        }
+
+        // 修改生成大纲函数
+        async function generateOutline() {
+            if (!apiClient) {
+                alert('请先设置 API Key');
+                return;
+            }
+
+            const title = document.getElementById('novelTitle').value;
+            if (!title) {
+                alert('请输入小说标题');
+                return;
+            }
+
+            showLoading('正在生成大纲...');
+            try {
+                const response = await apiClient.post('/chat/completions', {
+                    model: "moonshot-v1-8k",
+                    messages: [
+                        {
+                            role: "system",
+                            content: getSystemPrompt(document.getElementById('novelType').value, true)
+                        },
+                        {
+                            role: "user",
+                            content: `请为小说《${title}》创作详细大纲。`
+                        }
+                    ],
+                    temperature: 0.7,
+                    max_tokens: 2000
+                });
+
+                currentOutline = response.data.choices[0].message.content;
+                document.getElementById('contentArea').innerText = currentOutline;
+                document.getElementById('outlineRadio').checked = true;
+                
+                novelContent.title = title;
+                novelContent.outline = currentOutline;
+                saveContent();
+            } catch (error) {
+                alert('生成失败：' + (error.response?.data?.error?.message || error.message));
+            }
+            hideLoading();
+        }
+
+        // 修改生成内容函数
+        async function generateContent() {
+            if (!apiClient) {
+                alert('请先设置 API Key');
+                return;
+            }
+
+            if (!selectedItem || selectedItem.type !== 'section') {
+                alert('请先选择一个节！');
+                return;
+            }
+
+            const title = document.getElementById('novelTitle').value;
+            if (!title) {
+                alert('请输入小说标题');
+                return;
+            }
+
+            showLoading('正在生成内容...');
+            try {
+                const response = await apiClient.post('/chat/completions', {
+                    model: "moonshot-v1-8k",
+                    messages: [
+                        {
+                            role: "system",
+                            content: getSystemPrompt(document.getElementById('novelType').value, false)
+                        },
+                        {
+                            role: "user",
+                            content: `请为小说《${title}》的"${selectedItem.title}"创作内容。大纲内容：${currentOutline}`
+                        }
+                    ],
+                    temperature: 0.7,
+                    max_tokens: 4000
+                });
+
+                const content = response.data.choices[0].message.content;
+                document.getElementById('contentArea').innerText = content;
+                document.getElementById('contentRadio').checked = true;
+
+                // 保存章节内容
+                const chapterIndex = chapters.findIndex(c => 
+                    c.sections.some(s => s.id === selectedItem.id)
+                );
+                if (chapterIndex !== -1) {
+                    const chapter = chapters[chapterIndex];
+                    const sectionIndex = chapter.sections.findIndex(s => 
+                        s.id === selectedItem.id
+                    );
+                    if (!novelContent.chapters[chapterIndex]) {
+                        novelContent.chapters[chapterIndex] = {
+                            title: chapter.title,
+                            sections: []
+                        };
+                    }
+                    novelContent.chapters[chapterIndex].sections[sectionIndex] = {
+                        title: selectedItem.title,
+                        content: content
+                    };
+                    saveContent();
+                }
+            } catch (error) {
+                alert('生成失败：' + (error.response?.data?.error?.message || error.message));
+            }
+            hideLoading();
+        }
+
+        // 复制内容
+        function copyContent() {
+            const content = document.getElementById('contentArea').innerText;
+            navigator.clipboard.writeText(content).then(() => {
+                alert('内容已复制到剪贴板！');
+            }).catch(err => {
+                alert('复制失败：' + err.message);
+            });
+        }
+
+        // 添加章
+        function addChapter() {
+            const MAX_CHAPTERS = 20; // 设置最大章节数
+            if (chapters.length >= MAX_CHAPTERS) {
+                alert(`为保证小说质量，最多支持${MAX_CHAPTERS}章。建议：\n1. 每章2-3节\n2. 每节2000-3000字\n3. 总字数在8-12万字之间`);
+                return;
+            }
+
+            const chapterName = prompt('请输入章的标题：');
+            if (chapterName) {
+                const chapter = {
+                    id: Date.now(),
+                    type: 'chapter',
+                    title: `第${chapters.length + 1}章 ${chapterName}`,
+                    sections: []
+                };
+                chapters.push(chapter);
+                updateChapterTree();
+            }
+        }
+
+        // 添加节
+        function addSection() {
+            const MAX_SECTIONS = 5; // 每章最多节数
+            
+            if (!selectedItem || selectedItem.type !== 'chapter') {
+                alert('请先选择一个章！');
+                return;
+            }
+
+            const chapter = chapters.find(c => c.id === selectedItem.id);
+            if (chapter && chapter.sections.length >= MAX_SECTIONS) {
+                alert(`为保证内容质量，每章最多支持${MAX_SECTIONS}节。建议：\n1. 每节2000-3000字\n2. 节与节之间注意情节衔接\n3. 合理安排内容分布`);
+                return;
+            }
+
+            const sectionName = prompt('请输入节的标题：');
+            if (sectionName) {
+                if (chapter) {
+                    chapter.sections.push({
+                        id: Date.now(),
+                        type: 'section',
+                        title: `第${chapter.sections.length + 1}节 ${sectionName}`
+                    });
+                    updateChapterTree();
+                }
+            }
+        }
+
+        // 删除章节
+        function deleteItem() {
+            if (!selectedItem) {
+                alert('请先选择要删除的项目！');
+                return;
+            }
+
+            if (confirm('确定要删除吗？')) {
+                if (selectedItem.type === 'chapter') {
+                    chapters = chapters.filter(c => c.id !== selectedItem.id);
+                } else {
+                    const chapter = chapters.find(c => c.sections.some(s => s.id === selectedItem.id));
+                    if (chapter) {
+                        chapter.sections = chapter.sections.filter(s => s.id !== selectedItem.id);
+                    }
+                }
+                selectedItem = null;
+                updateChapterTree();
+            }
+        }
+
+        // 更新章节树
+        function updateChapterTree() {
+            const tree = document.getElementById('chapterTree');
+            tree.innerHTML = '';
+            
+            chapters.forEach(chapter => {
+                const chapterDiv = document.createElement('div');
+                chapterDiv.className = 'chapter-item' + (selectedItem && selectedItem.id === chapter.id ? ' active' : '');
+                chapterDiv.innerText = chapter.title;
+                chapterDiv.onclick = () => selectItem(chapter);
+                tree.appendChild(chapterDiv);
+
+                chapter.sections.forEach(section => {
+                    const sectionDiv = document.createElement('div');
+                    sectionDiv.className = 'chapter-item ms-4' + (selectedItem && selectedItem.id === section.id ? ' active' : '');
+                    sectionDiv.innerText = section.title;
+                    sectionDiv.onclick = () => selectItem(section);
+                    tree.appendChild(sectionDiv);
+                });
+            });
+        }
+
+        // 选择章节
+        function selectItem(item) {
+            selectedItem = item;
+            updateChapterTree();
+            
+            if (document.getElementById('contentRadio').checked) {
+                document.getElementById('contentArea').innerText = `当前选中：${item.title}`;
+            }
+        }
+
+        // 显示/隐藏加载动画
+        function showLoading(text) {
+            document.getElementById('loadingText').innerText = text;
+            document.getElementById('loading').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        // 保存内容到本地存储
+        function saveContent() {
+            localStorage.setItem('novelContent', JSON.stringify(novelContent));
+        }
+
+        // 加载保存的内容
+        function loadSavedContent() {
+            const saved = localStorage.getItem('novelContent');
+            if (saved) {
+                novelContent = JSON.parse(saved);
+                document.getElementById('novelTitle').value = novelContent.title;
+                currentOutline = novelContent.outline;
+                if (currentOutline) {
+                    document.getElementById('contentArea').innerText = currentOutline;
+                }
+                
+                // 恢复章节结构
+                chapters = novelContent.chapters.map((chapter, chapterIndex) => ({
+                    id: Date.now() + chapterIndex,
+                    type: 'chapter',
+                    title: chapter.title,
+                    sections: chapter.sections.map((section, sectionIndex) => ({
+                        id: Date.now() + chapterIndex + sectionIndex,
+                        type: 'section',
+                        title: section.title
+                    }))
+                }));
+                updateChapterTree();
+            }
+        }
+
+        // 导出为Word文档
+        async function exportToWord() {
+            const doc = new docx.Document({
+                sections: [{
+                    properties: {},
+                    children: [
+                        new docx.Paragraph({
+                            text: novelContent.title,
+                            heading: docx.HeadingLevel.HEADING_1,
+                            alignment: docx.AlignmentType.CENTER
+                        }),
+                        new docx.Paragraph({
+                            text: "大纲",
+                            heading: docx.HeadingLevel.HEADING_2
+                        }),
+                        new docx.Paragraph({
+                            text: novelContent.outline
+                        }),
+                        ...novelContent.chapters.flatMap(chapter => [
+                            new docx.Paragraph({
+                                text: chapter.title,
+                                heading: docx.HeadingLevel.HEADING_2
+                            }),
+                            ...chapter.sections.flatMap(section => [
+                                new docx.Paragraph({
+                                    text: section.title,
+                                    heading: docx.HeadingLevel.HEADING_3
+                                }),
+                                new docx.Paragraph({
+                                    text: section.content || ""
+                                })
+                            ])
+                        ])
+                    ]
+                }]
+            });
+
+            const blob = await docx.Packer.toBlob(doc);
+            saveAs(blob, `${novelContent.title || '小说'}.docx`);
+        }
+
+        // 导出为TXT文件
+        function exportToTxt() {
+            let content = `${novelContent.title}\n\n`;
+            content += `【大纲】\n${novelContent.outline}\n\n`;
+            
+            novelContent.chapters.forEach(chapter => {
+                content += `\n${chapter.title}\n\n`;
+                chapter.sections.forEach(section => {
+                    content += `${section.title}\n${section.content || ''}\n\n`;
+                });
+            });
+
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            saveAs(blob, `${novelContent.title || '小说'}.txt`);
+        }
+
+        // 添加重新生成函数
+        async function regenerateWithPrompt() {
+            if (!apiClient) {
+                alert('请先设置 API Key');
+                return;
+            }
+
+            if (!selectedItem || selectedItem.type !== 'section') {
+                alert('请先选择一个节！');
+                return;
+            }
+
+            const title = document.getElementById('novelTitle').value;
+            const customPrompt = document.getElementById('customPrompt').value;
+            
+            if (!customPrompt) {
+                alert('请输入自定义提示词');
+                return;
+            }
+
+            showLoading('正在重新生成内容...');
+            try {
+                const response = await apiClient.post('/chat/completions', {
+                    model: "moonshot-v1-8k",
+                    messages: [
+                        {
+                            role: "system",
+                            content: `你是一个专业的穿越历史小说作家。请根据大纲、章节信息和用户的具体要求，重新创作章节内容。
+要求：
+1. 内容长度2000-3000字
+2. 注重历史细节描写
+3. 人物对话生动自然
+4. 情节发展合理
+5. 保持叙事节奏
+6. 注意人物情感刻画
+7. 严格按照用户的自定义要求进行调整`
+                        },
+                        {
+                            role: "user",
+                            content: `请为小说《${title}》的"${selectedItem.title}"重新创作内容。
+大纲内容：${currentOutline}
+用户的具体要求：${customPrompt}`
+                        }
+                    ],
+                    temperature: 0.7,
+                    max_tokens: 4000
+                });
+
+                const content = response.data.choices[0].message.content;
+                document.getElementById('contentArea').innerText = content;
+                document.getElementById('contentRadio').checked = true;
+
+                // 保存新的章节内容
+                const chapterIndex = chapters.findIndex(c => 
+                    c.sections.some(s => s.id === selectedItem.id)
+                );
+                if (chapterIndex !== -1) {
+                    const chapter = chapters[chapterIndex];
+                    const sectionIndex = chapter.sections.findIndex(s => 
+                        s.id === selectedItem.id
+                    );
+                    if (!novelContent.chapters[chapterIndex]) {
+                        novelContent.chapters[chapterIndex] = {
+                            title: chapter.title,
+                            sections: []
+                        };
+                    }
+                    novelContent.chapters[chapterIndex].sections[sectionIndex] = {
+                        title: selectedItem.title,
+                        content: content
+                    };
+                    saveContent();
+                }
+            } catch (error) {
+                alert('生成失败：' + (error.response?.data?.error?.message || error.message));
+            }
+            hideLoading();
+        }
+    </script>
+</body>
+</html> 

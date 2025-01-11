@@ -1,0 +1,1 @@
+([('穿越历史小说生成器', '/Users/os/Desktop/Cursor/dist/穿越历史小说生成器', 'EXECUTABLE')],)
