@@ -937,10 +937,6 @@
             document.getElementById('authPanel').style.display = 'none';
             document.getElementById('mainContent').style.display = 'block';
             
-            // 禁用授权码输入和验证按钮
-            document.getElementById('authCode').disabled = true;
-            document.getElementById('verifyAuth').disabled = true;
-            
             alert('验证成功！');
         }
 
@@ -950,30 +946,26 @@
             
             // 检查已保存的授权码
             const savedAuthCode = localStorage.getItem('authCode');
-            const savedActivation = localStorage.getItem('authActivated');
             console.log('已保存的授权码:', savedAuthCode);
             
             if (savedAuthCode && validAuthCodes[savedAuthCode]) {
-                if (savedActivation) {
-                    const activated = new Date(savedActivation);
+                const activationDate = localStorage.getItem('authActivated');
+                if (activationDate) {
+                    const activated = new Date(activationDate);
                     const expiry = new Date(activated);
-                    expiry.setFullYear(expiry.getFullYear() + 1); // 设置一年有效期
+                    expiry.setFullYear(expiry.getFullYear() + 1);
                     
                     const now = new Date();
                     if (now <= expiry) {
-                        // 如果授权码未过期，自动填充并禁用输入
                         document.getElementById('authCode').value = savedAuthCode;
+                        document.getElementById('mainContent').style.display = 'block';
+                        // 禁用授权码输入和验证按钮
                         document.getElementById('authCode').disabled = true;
                         document.getElementById('verifyAuth').disabled = true;
-                        // 直接显示主内容
-                        document.getElementById('authPanel').style.display = 'none';
-                        document.getElementById('mainContent').style.display = 'block';
                         console.log('已恢复保存的授权状态');
                     } else {
-                        // 如果授权码已过期，清除所有相关存储
-                        localStorage.removeItem('authCode');
                         localStorage.removeItem('authActivated');
-                        localStorage.removeItem('moonshotApiKey');
+                        localStorage.removeItem('authCode');
                         console.log('授权已过期，已清除保存的状态');
                     }
                 }
