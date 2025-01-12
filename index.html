@@ -412,6 +412,29 @@
         .btn-group {
             gap: 0.5rem;
         }
+
+        /* 添加进度条样式 */
+        .generation-progress {
+            margin: 20px 0;
+            display: none;
+        }
+        .progress {
+            height: 6px;
+            border-radius: 3px;
+            background-color: #e9ecef;
+            overflow: hidden;
+        }
+        .progress-bar {
+            width: 0;
+            height: 100%;
+            background-color: #0d6efd;
+            transition: width 0.3s ease;
+        }
+        .loading-text {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #6c757d;
+        }
     </style>
 </head>
 <body>
@@ -1378,13 +1401,20 @@ ${currentContent}
                 return;
             }
 
-            const contentArea = document.getElementById('contentArea');
-            if (!contentArea) {
-                alert('页面元素加载失败，请刷新重试！');
-                return;
-            }
+            // 显示进度条
+            const progressBar = document.querySelector('.generation-progress');
+            const progressBarInner = progressBar.querySelector('.progress-bar');
+            progressBar.style.display = 'block';
+            let progress = 0;
 
-            showLoading();
+            // 启动进度条动画
+            const progressInterval = setInterval(() => {
+                progress += 2;
+                if (progress <= 90) {
+                    progressBarInner.style.width = `${progress}%`;
+                }
+            }, 300);
+
             try {
                 const messages = [
                     {
@@ -1398,13 +1428,21 @@ ${currentContent}
                 ];
 
                 const content = await callMoonshotAPI(messages, apiKey);
-                contentArea.value = content;
+                document.getElementById('contentArea').value = content;
                 localStorage.setItem('background', content);
+                
+                // 设置进度条为100%
+                progressBarInner.style.width = '100%';
                 
             } catch (error) {
                 alert('生成背景失败: ' + error.message);
             } finally {
-                hideLoading();
+                clearInterval(progressInterval);
+                // 1秒后隐藏进度条
+                setTimeout(() => {
+                    progressBar.style.display = 'none';
+                    progressBarInner.style.width = '0%';
+                }, 1000);
             }
         }
 
