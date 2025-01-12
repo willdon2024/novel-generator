@@ -1000,62 +1000,81 @@ ${currentContent}
             'AUTH0011-2025': { user: '授权用户', activated: null }
         };
 
+        function verifyAuthCode() {
+            console.log('验证按钮被点击');
+            const authCode = document.getElementById('authCode').value.trim();
+            console.log('输入的授权码:', authCode);
+            
+            if (!authCode) {
+                alert('请输入授权码');
+                return;
+            }
+
+            const authInfo = validAuthCodes[authCode];
+            console.log('授权信息:', authInfo);
+            
+            if (!authInfo) {
+                alert('无效的授权码');
+                return;
+            }
+
+            // 检查是否已激活
+            let activationDate = localStorage.getItem(`activation_${authCode}`);
+            if (!activationDate) {
+                // 首次激活，设置激活日期
+                activationDate = new Date().toISOString();
+                localStorage.setItem(`activation_${authCode}`, activationDate);
+            }
+
+            // 计算过期日期（激活日期 + 1年）
+            const activated = new Date(activationDate);
+            const expiry = new Date(activated);
+            expiry.setFullYear(expiry.getFullYear() + 1);
+            
+            const now = new Date();
+            if (now > expiry) {
+                alert('授权码已过期');
+                localStorage.removeItem(`activation_${authCode}`);
+                localStorage.removeItem('novelGenAuthCode');
+                localStorage.removeItem('novelGenUser');
+                return;
+            }
+
+            // 保存授权信息
+            localStorage.setItem('novelGenAuthCode', authCode);
+            localStorage.setItem('novelGenUser', authInfo.user);
+            
+            // 显示主要内容
+            document.getElementById('mainContent').style.display = 'block';
+            
+            // 禁用授权码输入和验证按钮
+            document.getElementById('authCode').disabled = true;
+            document.getElementById('verifyAuth').disabled = true;
+            
+            // 计算剩余天数
+            const daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
+            alert(`授权验证成功！\n授权有效期至：${expiry.toLocaleDateString()}\n剩余天数：${daysLeft}天`);
+        }
+
         // 页面加载时检查授权和绑定事件
         document.addEventListener('DOMContentLoaded', function() {
-            // 绑定验证按钮点击事件
-            document.getElementById('verifyAuth').onclick = function() {
-                const authCode = document.getElementById('authCode').value.trim();
-                if (!authCode) {
-                    alert('请输入授权码');
-                    return;
-                }
-
-                const authInfo = validAuthCodes[authCode];
-                if (!authInfo) {
-                    alert('无效的授权码');
-                    return;
-                }
-
-                // 检查是否已激活
-                let activationDate = localStorage.getItem(`activation_${authCode}`);
-                if (!activationDate) {
-                    // 首次激活，设置激活日期
-                    activationDate = new Date().toISOString();
-                    localStorage.setItem(`activation_${authCode}`, activationDate);
-                }
-
-                // 计算过期日期（激活日期 + 1年）
-                const activated = new Date(activationDate);
-                const expiry = new Date(activated);
-                expiry.setFullYear(expiry.getFullYear() + 1);
-                
-                const now = new Date();
-                if (now > expiry) {
-                    alert('授权码已过期');
-                    localStorage.removeItem(`activation_${authCode}`);
-                    localStorage.removeItem('novelGenAuthCode');
-                    localStorage.removeItem('novelGenUser');
-                    return;
-                }
-
-                // 保存授权信息
-                localStorage.setItem('novelGenAuthCode', authCode);
-                localStorage.setItem('novelGenUser', authInfo.user);
-                
-                // 显示主要内容
-                document.getElementById('mainContent').style.display = 'block';
-                
-                // 禁用授权码输入和验证按钮
-                document.getElementById('authCode').disabled = true;
-                document.getElementById('verifyAuth').disabled = true;
-                
-                // 计算剩余天数
-                const daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
-                alert(`授权验证成功！\n授权有效期至：${expiry.toLocaleDateString()}\n剩余天数：${daysLeft}天`);
-            };
+            console.log('页面加载完成');
+            
+            // 直接绑定点击事件
+            const verifyButton = document.getElementById('verifyAuth');
+            console.log('验证按钮元素:', verifyButton);
+            
+            if (verifyButton) {
+                verifyButton.addEventListener('click', verifyAuthCode);
+                console.log('验证按钮事件已绑定');
+            } else {
+                console.error('找不到验证按钮元素');
+            }
 
             // 检查已保存的授权码
             const savedAuthCode = localStorage.getItem('novelGenAuthCode');
+            console.log('已保存的授权码:', savedAuthCode);
+            
             if (savedAuthCode && validAuthCodes[savedAuthCode]) {
                 const activationDate = localStorage.getItem(`activation_${savedAuthCode}`);
                 if (activationDate) {
@@ -1070,10 +1089,12 @@ ${currentContent}
                         // 禁用授权码输入和验证按钮
                         document.getElementById('authCode').disabled = true;
                         document.getElementById('verifyAuth').disabled = true;
+                        console.log('已恢复保存的授权状态');
                     } else {
                         localStorage.removeItem(`activation_${savedAuthCode}`);
                         localStorage.removeItem('novelGenAuthCode');
                         localStorage.removeItem('novelGenUser');
+                        console.log('授权已过期，已清除保存的状态');
                     }
                 }
             }
@@ -1081,6 +1102,12 @@ ${currentContent}
             // 加载API Key
             loadApiKey();
         });
+
+        // 添加错误处理
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            console.error('Error: ' + msg + '\nURL: ' + url + '\nLine: ' + lineNo + '\nColumn: ' + columnNo + '\nError object: ' + JSON.stringify(error));
+            return false;
+        };
 
         // 步骤控制函数
         function updateStepIndicator(step) {
