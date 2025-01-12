@@ -342,6 +342,40 @@
             33% { content: '..'; }
             66% { content: '...'; }
         }
+
+        /* 添加进度条样式 */
+        .progress-container {
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .progress {
+            height: 4px;
+            background-color: #f0f0f0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: #0d6efd;
+            width: 0;
+            transition: width 0.3s ease;
+            animation: progress-animation 2s infinite;
+        }
+
+        @keyframes progress-animation {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+
+        .loading-text {
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -464,6 +498,12 @@
                             <div class="input-group mb-3">
                                 <input type="text" class="form-control" id="backgroundModification" placeholder="输入修改建议，例如：'增加更多人物背景'">
                                 <button class="btn btn-primary" onclick="applyBackgroundModification()">应用修改</button>
+                            </div>
+                            <div class="progress-container" id="backgroundProgress">
+                                <div class="progress">
+                                    <div class="progress-bar"></div>
+                                </div>
+                                <div class="loading-text">正在根据您的建议修改内容...</div>
                             </div>
                             <div class="suggestion-tags">
                                 <button class="btn btn-sm btn-outline-secondary" onclick="selectBackgroundSuggestion(this)">增加人物背景</button>
@@ -1353,12 +1393,44 @@ ${content}
                 return;
             }
             
+            const progressContainer = document.getElementById('backgroundProgress');
             const content = document.getElementById('backgroundContent').value;
+            const modifyButton = event.target;
+            
             try {
+                // 显示进度条和禁用按钮
+                progressContainer.style.display = 'block';
+                modifyButton.disabled = true;
+                modifyButton.innerHTML = '修改中...';
+                
                 const result = await applyModification('背景设定', content, modification);
                 document.getElementById('backgroundContent').value = result;
+                
+                // 修改成功的反馈
+                modifyButton.innerHTML = '修改成功';
+                modifyButton.classList.remove('btn-primary');
+                modifyButton.classList.add('btn-success');
+                setTimeout(() => {
+                    modifyButton.innerHTML = '应用修改';
+                    modifyButton.classList.remove('btn-success');
+                    modifyButton.classList.add('btn-primary');
+                }, 2000);
             } catch (error) {
                 alert(error.message);
+                modifyButton.innerHTML = '修改失败';
+                modifyButton.classList.remove('btn-primary');
+                modifyButton.classList.add('btn-danger');
+                setTimeout(() => {
+                    modifyButton.innerHTML = '应用修改';
+                    modifyButton.classList.remove('btn-danger');
+                    modifyButton.classList.add('btn-primary');
+                }, 2000);
+            } finally {
+                // 隐藏进度条和启用按钮
+                setTimeout(() => {
+                    progressContainer.style.display = 'none';
+                    modifyButton.disabled = false;
+                }, 2000);
             }
         }
 
