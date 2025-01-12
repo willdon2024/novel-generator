@@ -542,7 +542,7 @@
                             </select>
                         </div>
                         <div class="step-actions">
-                            <button class="btn btn-primary next-step-btn" onclick="nextStep()">下一步</button>
+                            <button class="btn btn-primary" onclick="nextStep(1)">下一步</button>
                         </div>
                     </div>
                     
@@ -1296,12 +1296,6 @@ ${currentContent}
         }
 
         async function nextStep(currentStep) {
-            const nextButton = document.querySelector(`#step${currentStep} .btn-primary`);
-            if (!nextButton) return;
-            
-            nextButton.disabled = true;
-            nextButton.classList.add('btn-loading');
-            
             try {
                 // 验证当前步骤
                 switch (currentStep) {
@@ -1311,10 +1305,16 @@ ${currentContent}
                         if (!title || !genre) {
                             throw new Error('请填写小说标题和类型！');
                         }
+                        
+                        // 验证 API Key
+                        const apiKey = localStorage.getItem('moonshotApiKey');
+                        if (!apiKey) {
+                            throw new Error('请先设置 API Key！');
+                        }
                         break;
                 }
                 
-                // 更新步骤
+                // 更新步骤显示
                 document.querySelectorAll('.step-content').forEach(content => {
                     content.style.display = 'none';
                 });
@@ -1324,18 +1324,20 @@ ${currentContent}
                 // 更新进度指示器
                 document.querySelectorAll('.step-item').forEach((item, index) => {
                     item.classList.remove('active');
-                    if (index === currentStep) {
+                    if (index === currentStep - 1) {
                         item.classList.add('completed');
-                    } else if (index === currentStep + 1) {
+                    } else if (index === currentStep) {
                         item.classList.add('active');
                     }
                 });
+
+                // 如果是进入第二步，自动开始生成背景
+                if (currentStep === 1) {
+                    await generateBackground();
+                }
                 
             } catch (error) {
                 alert(error.message);
-            } finally {
-                nextButton.classList.remove('btn-loading');
-                nextButton.disabled = false;
             }
         }
 
