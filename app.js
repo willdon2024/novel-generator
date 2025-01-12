@@ -242,6 +242,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // 步骤切换函数
 function nextStep(currentStepNumber) {
+    console.log('切换到下一步:', currentStepNumber + 1);
+    
     // 验证当前步骤的输入
     if (currentStepNumber === 1) {
         const title = document.getElementById('novelTitle').value;
@@ -265,13 +267,16 @@ function nextStep(currentStepNumber) {
     const currentContent = document.getElementById(`step${currentStepNumber}`);
     const nextContent = document.getElementById(`step${currentStepNumber + 1}`);
     if (currentContent && nextContent) {
-        currentContent.classList.remove('active');
-        nextContent.classList.add('active');
+        currentContent.classList.remove('show', 'active');
+        nextContent.classList.add('show', 'active');
         progressManager.nextStep();
+        console.log('内容已切换到步骤:', currentStepNumber + 1);
     }
 }
 
 function prevStep(currentStepNumber) {
+    console.log('返回上一步:', currentStepNumber - 1);
+    
     // 更新步骤指示器
     const currentStepItem = document.querySelector(`.step-item[data-step="${currentStepNumber}"]`);
     const prevStepItem = document.querySelector(`.step-item[data-step="${currentStepNumber - 1}"]`);
@@ -285,8 +290,9 @@ function prevStep(currentStepNumber) {
     const currentContent = document.getElementById(`step${currentStepNumber}`);
     const prevContent = document.getElementById(`step${currentStepNumber - 1}`);
     if (currentContent && prevContent) {
-        currentContent.classList.remove('active');
-        prevContent.classList.add('active');
+        currentContent.classList.remove('show', 'active');
+        prevContent.classList.add('show', 'active');
         progressManager.prevStep();
+        console.log('内容已切换到步骤:', currentStepNumber - 1);
     }
 } 

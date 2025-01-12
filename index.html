@@ -292,6 +292,10 @@
             display: none;
         }
         
+        .step-content.show {
+            display: block;
+        }
+        
         .step-content.active {
             display: block;
         }
@@ -499,15 +503,15 @@
             <div class="card">
                 <div class="card-body">
                     <!-- 步骤1：确认标题 -->
-                    <div class="step-content active" id="step1">
+                    <div class="step-content show active" id="step1">
                         <h5 class="card-title">第一步：确认小说标题和类型</h5>
                         <div class="mb-3">
-                            <label for="title" class="form-label">小说标题</label>
-                            <input type="text" class="form-control" id="title" required placeholder="请输入小说标题">
+                            <label for="novelTitle" class="form-label">小说标题</label>
+                            <input type="text" class="form-control" id="novelTitle" required>
                         </div>
                         <div class="mb-3">
-                            <label for="novelType" class="form-label">小说类型</label>
-                            <select class="form-select" id="novelType" required>
+                            <label for="novelGenre" class="form-label">小说类型</label>
+                            <select class="form-select" id="novelGenre" required>
                                 <option value="" disabled selected>请选择小说类型</option>
                                 <optgroup label="玄幻仙侠">
                                     <option value="玄幻修真">玄幻修真</option>
