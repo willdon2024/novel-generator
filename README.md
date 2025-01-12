@@ -1,65 +1,57 @@
-# 穿越历史小说生成器
+# AI小说生成器
 
-基于 Moonshot AI 的穿越历史小说自动生成工具。
+一个基于Moonshot AI的智能小说生成工具，可以帮助作者快速生成小说大纲和章节内容。
 
-## 🌟 特点
+## 功能特点
 
-- 🤖 AI 驱动的故事生成
-- 📝 自动生成详细大纲
-- 📚 支持自定义章节结构
-- 🎨 优美的中文写作风格
-- 💾 本地保存 API Key
-- 📱 响应式网页设计
+- 支持多种小说类型（都市情感、玄幻修真、科幻未来等）
+- 智能生成小说大纲
+- 自动生成章节内容
+- 支持人工干预和修改建议
+- 导出支持多种格式（TXT、Word）
+- 本地保存授权信息和API密钥
 
-## 🚀 在线使用
+## 技术栈
 
-访问：[https://willdon2024.github.io/novel-generator/](https://willdon2024.github.io/novel-generator/)
+- 后端：Python + Flask
+- 前端：HTML + JavaScript + Bootstrap
+- AI：Moonshot AI API
 
-## 📖 使用说明
+## 安装和使用
 
-1. 获取 API Key
-   - 访问 [Moonshot AI 平台](https://platform.moonshot.cn/)
-   - 注册并获取 API Key
+1. 克隆仓库
+```bash
+git clone https://github.com/yourusername/novel-generator.git
+cd novel-generator
+```
 
-2. 使用步骤
-   - 输入你的 API Key
-   - 在左上角输入小说标题
-   - 点击"生成大纲"按钮
-   - 使用章节管理功能添加章节
-   - 选择章节生成具体内容
+2. 安装依赖
+```bash
+pip install -r requirements.txt
+```
 
-3. 注意事项
-   - API Key 仅保存在浏览器本地
-   - 刷新页面后需要重新输入 API Key
-   - 每个章节生成可能需要一些时间
+3. 运行应用
+```bash
+python app.py
+```
 
-## 💡 功能特性
+4. 在浏览器中访问 `http://localhost:5001`
 
-- 自动生成故事大纲
-- 自定义章节结构
-- 智能内容生成
-- 一键复制内容
-- 本地数据存储
-- 实时章节预览
+## 使用说明
 
-## 🛠️ 技术栈
+1. 首次使用需要输入授权码和Moonshot API Key
+2. 选择小说类型并输入标题
+3. 生成大纲
+4. 根据需要修改大纲
+5. 生成章节内容
+6. 导出成品
 
-- HTML5
-- CSS3 (Bootstrap 5)
-- JavaScript (原生)
-- Moonshot AI API
-- GitHub Pages
+## 注意事项
 
-## 🔒 隐私说明
+- 需要有效的Moonshot AI API Key
+- 授权码为一次性使用，不可在多设备上使用
+- API Key和授权信息仅保存在本地浏览器中
 
-- API Key 仅保存在用户本地浏览器中
-- 不会上传或存储任何用户数据
-- 所有生成的内容都是即时的，不会保存在服务器上
-
-## 🤝 贡献
-
-欢迎提交 Issue 和 Pull Request！
-
-## 📄 许可证
+## License
 
 MIT License 

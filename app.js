@@ -155,3 +155,85 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('找不到验证按钮元素');
     }
 }); 
+
+// 生成背景内容
+function generateBackground() {
+    const progressBar = document.querySelector('#step2 .progress-bar');
+    const loadingText = document.querySelector('#step2 .loading-text');
+    const backgroundContent = document.getElementById('backgroundContent');
+    
+    // 显示进度条和加载文本
+    document.querySelector('#step2 .generation-progress').style.display = 'block';
+    progressBar.style.width = '0%';
+    
+    // 模拟生成过程
+    let progress = 0;
+    const interval = setInterval(() => {
+        progress += 5;
+        progressBar.style.width = `${progress}%`;
+        
+        if (progress >= 100) {
+            clearInterval(interval);
+            // 隐藏进度条
+            setTimeout(() => {
+                document.querySelector('#step2 .generation-progress').style.display = 'none';
+            }, 500);
+        }
+    }, 100);
+}
+
+// 生成大纲内容
+function generateOutline() {
+    const progressBar = document.querySelector('#step3 .progress-bar');
+    const loadingText = document.querySelector('#step3 .loading-text');
+    const outlineContent = document.getElementById('outlineContent');
+    
+    // 显示进度条和加载文本
+    document.querySelector('#step3 .generation-progress').style.display = 'block';
+    progressBar.style.width = '0%';
+    
+    // 模拟生成过程
+    let progress = 0;
+    const interval = setInterval(() => {
+        progress += 5;
+        progressBar.style.width = `${progress}%`;
+        
+        if (progress >= 100) {
+            clearInterval(interval);
+            // 隐藏进度条
+            setTimeout(() => {
+                document.querySelector('#step3 .generation-progress').style.display = 'none';
+            }, 500);
+        }
+    }, 100);
+}
+
+// 重新生成背景
+function regenerateBackground() {
+    generateBackground();
+}
+
+// 重新生成大纲
+function regenerateOutline() {
+    generateOutline();
+}
+
+// 保存内容
+function saveContent() {
+    alert('内容已保存！');
+}
+
+// 导出为 Word
+function exportWord() {
+    alert('正在导出 Word 文件...');
+}
+
+// 导出为 Text
+function exportText() {
+    alert('正在导出 Text 文件...');
+}
+
+// 复制内容
+function copyContent() {
+    alert('内容已复制到剪贴板！');
+} 

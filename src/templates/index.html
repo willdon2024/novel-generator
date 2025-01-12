@@ -834,6 +834,101 @@
                 suggestionTags.appendChild(button);
             });
         }
+
+        function verifyAuthCode() {
+            console.log('验证按钮被点击');
+            const authCode = document.getElementById('authCode').value.trim();
+            console.log('输入的授权码:', authCode);
+                
+            if (!authCode) {
+                alert('请输入授权码');
+                return;
+            }
+
+            const authInfo = validAuthCodes[authCode];
+            console.log('授权信息:', authInfo);
+            
+            if (!authInfo) {
+                alert('无效的授权码');
+                return;
+            }
+
+            // 检查是否已激活
+            if (authInfo.activated) {
+                // 如果已激活，检查是否是当前设备激活的
+                const savedAuthCode = localStorage.getItem('novelGenAuthCode');
+                const savedActivation = localStorage.getItem(`activation_${authCode}`);
+                
+                if (savedAuthCode === authCode && savedActivation) {
+                    // 如果是当前设备激活的，允许继续使用
+                    document.getElementById('authPanel').style.display = 'none';
+                    document.getElementById('mainContent').style.display = 'block';
+                    return;
+                }
+                
+                alert('此授权码已在其他设备上使用');
+                return;
+            }
+
+            // 激活授权码
+            authInfo.activated = new Date().toISOString();
+            
+            // 保存授权状态到localStorage
+            localStorage.setItem('novelGenAuthCode', authCode);
+            localStorage.setItem(`activation_${authCode}`, authInfo.activated);
+            
+            // 隐藏验证界面，显示主内容
+            document.getElementById('authPanel').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            
+            // 禁用授权码输入和验证按钮
+            document.getElementById('authCode').disabled = true;
+            document.getElementById('verifyAuth').disabled = true;
+            
+            alert('验证成功！');
+        }
+
+        // 页面加载时检查授权和绑定事件
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('页面加载完成');
+            
+            // 检查已保存的授权码
+            const savedAuthCode = localStorage.getItem('novelGenAuthCode');
+            console.log('已保存的授权码:', savedAuthCode);
+            
+            if (savedAuthCode && validAuthCodes[savedAuthCode]) {
+                const activationDate = localStorage.getItem(`activation_${savedAuthCode}`);
+                if (activationDate) {
+                    const activated = new Date(activationDate);
+                    const expiry = new Date(activated);
+                    expiry.setFullYear(expiry.getFullYear() + 1); // 设置一年有效期
+                    
+                    const now = new Date();
+                    if (now <= expiry) {
+                        // 如果授权码未过期，自动填充并禁用输入
+                        document.getElementById('authCode').value = savedAuthCode;
+                        document.getElementById('authCode').disabled = true;
+                        document.getElementById('verifyAuth').disabled = true;
+                        // 直接显示主内容
+                        document.getElementById('authPanel').style.display = 'none';
+                        document.getElementById('mainContent').style.display = 'block';
+                        console.log('已恢复保存的授权状态');
+                    } else {
+                        // 如果授权码已过期，清除所有相关存储
+                        localStorage.removeItem(`activation_${savedAuthCode}`);
+                        localStorage.removeItem('novelGenAuthCode');
+                        localStorage.removeItem('moonshotApiKey');
+                        console.log('授权已过期，已清除保存的状态');
+                    }
+                }
+            }
+            
+            // 加载API Key
+            loadApiKey();
+            
+            // 绑定验证按钮事件
+            document.getElementById('verifyAuth').addEventListener('click', verifyAuthCode);
+        });
     </script>
 </body>
 </html> 
