@@ -559,9 +559,18 @@
                             <select class="form-select" id="chapterSelect">
                                 <option value="" disabled selected>请选择章节</option>
                             </select>
+                            <button class="btn btn-primary mt-3" onclick="generateChapter()">生成章节内容</button>
                         </div>
                         <div class="content-area-wrapper">
                             <textarea class="content-area" id="chapterContent" placeholder="请选择要生成的章节..."></textarea>
+                            <!-- 添加进度条和加载状态 -->
+                            <div class="generation-progress" style="display: none;">
+                                <div class="progress" style="height: 4px; margin: 20px 0;">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                                </div>
+                                <p class="text-center text-muted loading-text">正在生成章节内容，请耐心等待...</p>
+                                <p class="text-center text-muted estimated-time">预计需要 1-2 分钟</p>
+                            </div>
                         </div>
                         <div class="intervention-panel">
                             <h6>章节调整</h6>
@@ -1390,10 +1399,26 @@ ${currentContent}
             const chapterSelect = document.getElementById('chapterSelect');
             const selectedChapter = chapterSelect.options[chapterSelect.selectedIndex].text;
             
-            if (!selectedChapter) {
+            if (!selectedChapter || chapterSelect.value === "") {
                 alert('请选择要生成的章节');
                 return;
             }
+            
+            // 显示进度条和加载状态
+            const progressDiv = document.querySelector('#step4 .generation-progress');
+            const progressBar = progressDiv.querySelector('.progress-bar');
+            progressDiv.style.display = 'block';
+            
+            // 启动进度条动画
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 1;
+                if (progress > 90) {
+                    clearInterval(progressInterval);
+                } else {
+                    progressBar.style.width = `${progress}%`;
+                }
+            }, 1000);
             
             document.getElementById('chapterContent').value = '正在生成章节内容，请稍候...';
             
@@ -1409,10 +1434,10 @@ ${currentContent}
                             content: `请基于以下信息，创作《${title}》的${selectedChapter}：
 
 背景设定：
-${backgroundContent}
+${document.getElementById('backgroundContent').value}
 
 故事大纲：
-${outlineContent}
+${document.getElementById('outlineContent').value}
 
 要求：
 1. 详细描写场景和人物
@@ -1424,13 +1449,25 @@ ${outlineContent}
 7. 与前文保持连贯
 8. 合理安排情节节奏`
                         }
-                    ]
+                    ],
+                    temperature: 0.8,
+                    max_tokens: 4000
                 });
+                
+                // 生成完成，设置进度条为100%
+                progressBar.style.width = '100%';
+                setTimeout(() => {
+                    progressDiv.style.display = 'none';
+                    progressBar.style.width = '0%';
+                }, 1000);
                 
                 document.getElementById('chapterContent').value = response.choices[0].message.content;
             } catch (error) {
                 console.error('Error:', error);
+                alert('生成章节失败：' + error.message);
                 document.getElementById('chapterContent').value = '生成失败，请稍后重试';
+            } finally {
+                clearInterval(progressInterval);
             }
         }
 
