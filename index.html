@@ -751,7 +751,13 @@
         }
 
         document.getElementById('confirmApiKey').addEventListener('click', async function() {
-            const apiKey = document.getElementById('apiKey').value;
+            const apiKeyInput = document.getElementById('apiKey');
+            if (!apiKeyInput) {
+                alert('页面元素加载失败，请刷新重试！');
+                return;
+            }
+
+            const apiKey = apiKeyInput.value;
             if (!apiKey) {
                 alert('请输入 API Key');
                 return;
@@ -766,17 +772,12 @@
                     content: "你好"
                 }];
                 
-                console.log('开始验证 API Key...');
                 await callMoonshotAPI(testMessages, apiKey);
-                
-                console.log('API Key 验证成功');
-                document.getElementById('apiKey').disabled = true;
-                localStorage.setItem('apiKey', apiKey);
+                saveApiKey(apiKey);
                 alert('API Key 验证成功！');
                 
             } catch (error) {
-                console.error('API Key 验证失败:', error);
-                alert(error.message);
+                alert('API Key 验证失败: ' + error.message);
                 this.disabled = false;
             } finally {
                 this.textContent = '确认';
@@ -1377,6 +1378,12 @@ ${currentContent}
                 return;
             }
 
+            const contentArea = document.getElementById('contentArea');
+            if (!contentArea) {
+                alert('页面元素加载失败，请刷新重试！');
+                return;
+            }
+
             showLoading();
             try {
                 const messages = [
@@ -1391,7 +1398,7 @@ ${currentContent}
                 ];
 
                 const content = await callMoonshotAPI(messages, apiKey);
-                document.getElementById('contentArea').value = content;
+                contentArea.value = content;
                 localStorage.setItem('background', content);
                 
             } catch (error) {
