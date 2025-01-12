@@ -379,6 +379,8 @@
             const savedApiKey = localStorage.getItem('moonshotApiKey');
             if (savedApiKey) {
                 document.getElementById('apiKey').value = savedApiKey;
+                document.getElementById('apiKey').disabled = true;
+                document.getElementById('confirmApiKey').disabled = true;
             }
         }
 
@@ -400,6 +402,8 @@
             const apiKey = document.getElementById('apiKey').value;
             if (apiKey) {
                 saveApiKey(apiKey);
+                document.getElementById('apiKey').disabled = true;
+                document.getElementById('confirmApiKey').disabled = true;
                 alert('API Key 已保存！');
             } else {
                 alert('请输入 API Key');
