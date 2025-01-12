@@ -254,6 +254,20 @@
             </div>
         </div>
 
+        <!-- 授权验证部分 -->
+        <div class="card mb-4" id="authPanel">
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="authCode" class="form-label">授权码</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control" id="authCode" placeholder="请输入授权码">
+                        <button type="button" class="btn btn-primary" id="verifyAuth">验证</button>
+                    </div>
+                    <small class="text-muted">请输入您的授权码</small>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             <!-- 左侧面板 -->
             <div class="col-md-4 left-panel">
@@ -456,6 +470,11 @@
         let selectedItem = null;
         let sessionId = null;
         let currentStage = 'background';
+
+        // 定义有效的授权码
+        const validAuthCodes = {
+            'AUTH0011-2025': { user: '授权用户', activated: null }
+        };
 
         // 设置 API Key
         async function setApiKey() {
@@ -945,9 +964,16 @@
             alert('授权码验证成功！有效期至：' + expiry.toLocaleDateString());
         }
 
-        // 页面加载时检查授权状态
+        // 页面加载完成后立即执行
         document.addEventListener('DOMContentLoaded', function() {
             console.log('页面加载完成');
+            
+            // 绑定验证按钮点击事件
+            const verifyButton = document.getElementById('verifyAuth');
+            if (verifyButton) {
+                verifyButton.addEventListener('click', verifyAuthCode);
+                console.log('验证按钮事件已绑定');
+            }
             
             // 检查已保存的授权码
             const savedAuthCode = localStorage.getItem('authCode');
