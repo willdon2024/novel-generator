@@ -238,4 +238,55 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         console.error('找不到验证按钮元素');
     }
-}); 
+});
+
+// 步骤切换函数
+function nextStep(currentStepNumber) {
+    // 验证当前步骤的输入
+    if (currentStepNumber === 1) {
+        const title = document.getElementById('novelTitle').value;
+        const genre = document.getElementById('novelGenre').value;
+        if (!title || !genre) {
+            alert('请填写小说标题和选择类型');
+            return;
+        }
+    }
+    
+    // 更新步骤指示器
+    const currentStepItem = document.querySelector(`.step-item[data-step="${currentStepNumber}"]`);
+    const nextStepItem = document.querySelector(`.step-item[data-step="${currentStepNumber + 1}"]`);
+    if (currentStepItem && nextStepItem) {
+        currentStepItem.classList.remove('active');
+        currentStepItem.classList.add('completed');
+        nextStepItem.classList.add('active');
+    }
+    
+    // 切换内容显示
+    const currentContent = document.getElementById(`step${currentStepNumber}`);
+    const nextContent = document.getElementById(`step${currentStepNumber + 1}`);
+    if (currentContent && nextContent) {
+        currentContent.classList.remove('active');
+        nextContent.classList.add('active');
+        progressManager.nextStep();
+    }
+}
+
+function prevStep(currentStepNumber) {
+    // 更新步骤指示器
+    const currentStepItem = document.querySelector(`.step-item[data-step="${currentStepNumber}"]`);
+    const prevStepItem = document.querySelector(`.step-item[data-step="${currentStepNumber - 1}"]`);
+    if (currentStepItem && prevStepItem) {
+        currentStepItem.classList.remove('active');
+        prevStepItem.classList.remove('completed');
+        prevStepItem.classList.add('active');
+    }
+    
+    // 切换内容显示
+    const currentContent = document.getElementById(`step${currentStepNumber}`);
+    const prevContent = document.getElementById(`step${currentStepNumber - 1}`);
+    if (currentContent && prevContent) {
+        currentContent.classList.remove('active');
+        prevContent.classList.add('active');
+        progressManager.prevStep();
+    }
+} 
