@@ -338,7 +338,7 @@
                     <label for="authCode" class="form-label">授权码</label>
                     <div class="api-key-group">
                         <input type="password" class="form-control" id="authCode" required>
-                        <button type="button" class="btn btn-primary" id="verifyAuth">验证</button>
+                        <button type="button" class="btn btn-primary" id="verifyAuth" onclick="verifyAuthCode()">验证</button>
                     </div>
                     <small class="text-muted">请输入您的授权码</small>
                 </div>
@@ -949,17 +949,6 @@ ${currentContent}
         document.addEventListener('DOMContentLoaded', function() {
             console.log('页面加载完成');
             
-            // 直接绑定点击事件
-            const verifyButton = document.getElementById('verifyAuth');
-            console.log('验证按钮元素:', verifyButton);
-            
-            if (verifyButton) {
-                verifyButton.addEventListener('click', verifyAuthCode);
-                console.log('验证按钮事件已绑定');
-            } else {
-                console.error('找不到验证按钮元素');
-            }
-
             // 检查已保存的授权码
             const savedAuthCode = localStorage.getItem('novelGenAuthCode');
             console.log('已保存的授权码:', savedAuthCode);
