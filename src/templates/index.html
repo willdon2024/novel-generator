@@ -393,6 +393,62 @@
         </div>
     </div>
 
+    <!-- 步骤2：故事背景 -->
+    <div class="step-content" id="step2" style="display: none;">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">故事背景设定</h5>
+                <div class="content-area-wrapper">
+                    <textarea class="content-area" id="backgroundContent" readonly></textarea>
+                </div>
+                
+                <!-- 添加人工干预功能区域 -->
+                <div class="modification-tools mt-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                <i class="bi bi-magic"></i> 
+                                <span>背景修改助手</span>
+                            </h6>
+                            <div class="input-group mb-3">
+                                <input type="text" class="form-control" id="backgroundSuggestion" 
+                                       placeholder="输入修改建议，例如：'增加更多世界观细节'、'补充势力关系'">
+                                <button class="btn btn-warning" onclick="regenerateBackground()">
+                                    <i class="bi bi-arrow-clockwise"></i> 重新生成
+                                </button>
+                            </div>
+                            <div class="suggestion-examples">
+                                <small class="text-muted">背景修改建议示例：</small>
+                                <div class="suggestion-tags mt-2">
+                                    <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="applyBackgroundSuggestion(this)">
+                                        增加更多世界观细节
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="applyBackgroundSuggestion(this)">
+                                        补充势力关系描述
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="applyBackgroundSuggestion(this)">
+                                        加强文化背景
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="applyBackgroundSuggestion(this)">
+                                        突出地理环境
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="applyBackgroundSuggestion(this)">
+                                        完善历史背景
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step-actions mt-3">
+                    <button class="btn btn-secondary" onclick="prevStep(2)">返回上一步</button>
+                    <button class="btn btn-primary" onclick="nextStep(2)">下一步</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let currentOutline = '';
@@ -929,6 +985,47 @@
             // 绑定验证按钮事件
             document.getElementById('verifyAuth').addEventListener('click', verifyAuthCode);
         });
+
+        // 添加新的JavaScript函数
+        function applyBackgroundSuggestion(button) {
+            document.getElementById('backgroundSuggestion').value = button.textContent.trim();
+        }
+
+        async function regenerateBackground() {
+            const suggestion = document.getElementById('backgroundSuggestion').value;
+            if (!suggestion) {
+                alert('请输入修改建议');
+                return;
+            }
+            
+            const title = document.getElementById('novelTitle').value;
+            const genre = document.getElementById('novelGenre').value;
+            
+            showLoading('正在根据建议修改背景...');
+            try {
+                const response = await fetch('/regenerate_background', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        title: title,
+                        genre: genre,
+                        suggestion: suggestion,
+                        current_content: document.getElementById('backgroundContent').value
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    document.getElementById('backgroundContent').value = data.content;
+                    alert('背景已根据建议重新生成！');
+                } else {
+                    alert('修改失败：' + data.message);
+                }
+            } catch (error) {
+                alert('修改失败：' + error.message);
+            }
+            hideLoading();
+        }
     </script>
 </body>
 </html> 

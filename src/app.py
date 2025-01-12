@@ -504,5 +504,53 @@ def get_story_status():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
 
+@app.route('/regenerate_background', methods=['POST'])
+def regenerate_background():
+    if not writer:
+        return jsonify({"status": "error", "message": "请先设置 API Key"})
+    
+    data = request.json
+    title = data.get('title')
+    genre = data.get('genre')
+    suggestion = data.get('suggestion')
+    current_content = data.get('current_content')
+    
+    if not all([title, genre, suggestion, current_content]):
+        return jsonify({"status": "error", "message": "缺少必要的参数"})
+    
+    try:
+        prompt = f"""请根据以下建议修改这个{genre}小说《{title}》的背景设定：
+
+当前背景：
+{current_content}
+
+修改建议：
+{suggestion}
+
+要求：
+1. 保持原有设定的核心要素
+2. 根据修改建议进行优化和扩充
+3. 确保修改后的内容更加丰富和完整
+4. 保持文风的一致性
+5. 注意细节的连贯性"""
+
+        completion = openai.ChatCompletion.create(
+            model="moonshot-v1-8k",
+            messages=[
+                {"role": "system", "content": "你是一个专业的小说策划，专注于创作背景设定。"},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            max_tokens=2000
+        )
+        
+        content = completion.choices[0].message.content
+        return jsonify({
+            "status": "success",
+            "content": content
+        })
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001) 
