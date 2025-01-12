@@ -1999,20 +1999,28 @@ ${outline}
                 progressBar.style.width = '0%';
                 loadingText.textContent = message;
                 
-                return {
-                    update: (progress) => {
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += 2;
+                    if (progress <= 90) {
                         progressBar.style.width = `${progress}%`;
-                    },
-                    complete: (message = '完成！') => {
+                    }
+                }, 300);
+                
+                return {
+                    interval: progressInterval,
+                    complete: () => {
                         progressBar.style.width = '100%';
-                        loadingText.textContent = message;
+                        loadingText.textContent = '生成完成！';
+                        clearInterval(progressInterval);
                         setTimeout(() => {
                             progressDiv.style.display = 'none';
                             progressBar.style.width = '0%';
                         }, 1000);
                     },
-                    error: (message = '处理失败') => {
-                        loadingText.textContent = message;
+                    error: (message) => {
+                        loadingText.textContent = message || '生成失败，请重试';
+                        clearInterval(progressInterval);
                         setTimeout(() => {
                             progressDiv.style.display = 'none';
                             progressBar.style.width = '0%';
@@ -2084,7 +2092,13 @@ ${outline}
                     },
                     {
                         role: "user",
-                        content: `请为${genre}小说《${title}》的${chapter.title}生成内容。要求：\n1. 字数4000-6000字\n2. 场景描写细腻\n3. 情节连贯\n4. 人物性格鲜明\n5. 故事节奏合理`
+                        content: `请为${genre}小说《${title}》的${chapter.title}生成内容。要求：\n1. 字数4000-6000字
+2. 场景描写细腻
+3. 情节连贯
+4. 人物性格鲜明
+5. 故事节奏合理
+6. 增加更多的冲突和矛盾
+7. 适当埋设伏笔`
                     }
                 ];
 
@@ -2095,7 +2109,8 @@ ${outline}
                 AppState.savedChapters[AppState.selectedItem.id] = content;
                 AppState.save();
                 
-                progress.complete('生成完成！');
+                progress.complete();
+                updateChapterTree();
             } catch (error) {
                 progress.error(error.message);
                 alert('生成失败：' + error.message);
@@ -2170,7 +2185,13 @@ ${outline}
                     },
                     {
                         role: "user",
-                        content: `请为${genre}小说《${title}》的${chapter.title}生成内容。要求：\n1. 字数4000-6000字\n2. 场景描写细腻\n3. 情节连贯\n4. 人物性格鲜明\n5. 故事节奏合理`
+                        content: `请为${genre}小说《${title}》的${chapter.title}生成内容。要求：\n1. 字数4000-6000字
+2. 场景描写细腻
+3. 情节连贯
+4. 人物性格鲜明
+5. 故事节奏合理
+6. 增加更多的冲突和矛盾
+7. 适当埋设伏笔`
                     }
                 ];
 
