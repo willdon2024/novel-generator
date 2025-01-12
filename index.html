@@ -235,7 +235,7 @@
                     <div class="mb-3">
                         <label for="authCode" class="form-label">授权码</label>
                         <div class="api-key-group">
-                            <input type="text" class="form-control" id="authCode" required>
+                            <input type="password" class="form-control" id="authCode" required>
                             <button type="button" class="btn btn-primary" id="verifyAuth" style="min-width: 80px; line-height: 1;">验证</button>
                         </div>
                         <small class="text-muted">请输入您的授权码</small>
@@ -777,6 +777,10 @@ ${currentContent}
             // 显示主要内容
             document.getElementById('mainContent').style.display = 'block';
             
+            // 禁用授权码输入和验证按钮
+            document.getElementById('authCode').disabled = true;
+            document.getElementById('verifyAuth').disabled = true;
+            
             // 计算剩余天数
             const daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
             alert(`授权验证成功！\n授权有效期至：${expiry.toLocaleDateString()}\n剩余天数：${daysLeft}天`);
@@ -796,6 +800,9 @@ ${currentContent}
                     if (now <= expiry) {
                         document.getElementById('authCode').value = savedAuthCode;
                         document.getElementById('mainContent').style.display = 'block';
+                        // 禁用授权码输入和验证按钮
+                        document.getElementById('authCode').disabled = true;
+                        document.getElementById('verifyAuth').disabled = true;
                     } else {
                         localStorage.removeItem(`activation_${savedAuthCode}`);
                         localStorage.removeItem('novelGenAuthCode');
