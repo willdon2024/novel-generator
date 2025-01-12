@@ -261,6 +261,70 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // 绑定第三步的重新生成按钮
+    const outlineRegenerateBtn = document.querySelector('#step3 .regenerate-btn');
+    if (outlineRegenerateBtn) {
+        outlineRegenerateBtn.addEventListener('click', function() {
+            generateOutline();
+        });
+    }
+    
+    // 绑定第三步的保存按钮
+    const outlineSaveBtn = document.querySelector('#step3 .save-btn');
+    if (outlineSaveBtn) {
+        outlineSaveBtn.addEventListener('click', function() {
+            const outlineText = document.getElementById('outlineText');
+            if (outlineText && outlineText.value.trim()) {
+                alert('大纲内容已保存！');
+                saveCurrentState();
+            }
+        });
+    }
+    
+    // 绑定"确认并继续"按钮
+    const confirmButtons = document.querySelectorAll('.confirm-btn');
+    confirmButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const currentStep = parseInt(this.closest('.tab-pane').id.replace('step', ''));
+            nextStep(currentStep);
+        });
+    });
+    
+    // 绑定"上一步"按钮
+    const prevButtons = document.querySelectorAll('.prev-btn');
+    prevButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const currentStep = parseInt(this.closest('.tab-pane').id.replace('step', ''));
+            prevStep(currentStep);
+        });
+    });
+    
+    // 绑定快捷按钮事件
+    const quickButtons = document.querySelectorAll('.quick-action-btn');
+    quickButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const action = this.textContent.trim();
+            const currentStep = parseInt(this.closest('.tab-pane').id.replace('step', ''));
+            const textArea = document.getElementById(currentStep === 2 ? 'backgroundText' : 'outlineText');
+            
+            if (textArea) {
+                const currentContent = textArea.value;
+                switch(action) {
+                    case '调整情节发展':
+                        textArea.value = currentContent + '\n\n[调整后的情节发展...]';
+                        break;
+                    case '增加故事转折':
+                        textArea.value = currentContent + '\n\n[新增的故事转折...]';
+                        break;
+                    case '优化结局设计':
+                        textArea.value = currentContent + '\n\n[优化后的结局...]';
+                        break;
+                }
+                saveCurrentState();
+            }
+        });
+    });
 });
 
 // 步骤切换函数
@@ -523,6 +587,212 @@ function generateBackground() {
                 </div>
             `;
             backgroundText.parentNode.appendChild(editTip);
+            
+            // 恢复重新生成按钮
+            if (regenerateBtn) {
+                regenerateBtn.disabled = false;
+                regenerateBtn.innerHTML = '重新生成';
+            }
+        }
+        hideLoading();
+    }, 12000);
+}
+
+// 生成小说大纲
+function generateOutline() {
+    const title = document.getElementById('novelTitle').value;
+    const genre = document.getElementById('novelGenre').value;
+    const backgroundText = document.getElementById('backgroundText').value;
+    const outlineText = document.getElementById('outlineText');
+    const regenerateBtn = document.querySelector('#step3 .regenerate-btn');
+    
+    // 禁用重新生成按钮
+    if (regenerateBtn) {
+        regenerateBtn.disabled = true;
+        regenerateBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 生成中...';
+    }
+    
+    // 显示初始状态
+    if (outlineText) {
+        outlineText.value = '系统正在构思大纲，请稍候...';
+        outlineText.style.opacity = '0.7';
+        outlineText.disabled = true;
+    }
+    
+    // 显示加载状态
+    showLoading('正在生成小说大纲...');
+    
+    // 根据不同类型生成不同的大纲模板
+    let outlineTemplate = '';
+    switch(genre) {
+        case '都市生活':
+            outlineTemplate = `《${title}》小说大纲
+
+第一章：初入职场
+- 李好入职互联网公司，初次见到陈远
+- 接手重要项目，与张明产生第一次冲突
+- 王小美给出建议，帮助李好度过难关
+
+第二章：项目危机
+- 项目进展不顺，面临deadline压力
+- 陈远伸出援手，两人共同加班
+- 张明从中作梗，项目陷入困境
+
+第三章：转机与情愫
+- 李好灵光一现，找到项目突破口
+- 陈远对李好刮目相看，暗生情愫
+- 张明嫉妒，开始暗中使绊子
+
+第四章：创业契机
+- 陈远提出创业计划，邀请李好加入
+- 王小美支持李好放手一搏
+- 张明得知后，散布不利谣言
+
+第五章：感情抉择
+- 李好在事业与感情间徘徊
+- 陈远表明心意，但时机不恰当
+- 王小美从旁调解，点醒李好
+
+第六章：危机与转机
+- 创业遭遇资金链危机
+- 张明趁机挖角核心团队
+- 李好临危不乱，展现领导才能
+
+第七章：柳暗花明
+- 项目获得重要投资
+- 陈远与李好关系更进一步
+- 张明阴谋败露，遭到惩罚
+
+第八章：成功在望
+- 公司走上正轨，团队凝聚力增强
+- 李好与陈远终成眷属
+- 王小美见证好友的成长与幸福
+
+尾声：
+- 一年后的公司年会
+- 李好回顾创业历程的得失
+- 对未来的展望与期待`;
+            break;
+        case '玄幻修仙':
+            outlineTemplate = `《${title}》小说大纲
+
+第一卷：灵根觉醒
+第一章：平凡少年
+- 叶天发现自己拥有超强灵根
+- 被云霄真人收为关门弟子
+- 初入青云门，结识同门师兄弟
+
+第二章：修炼之路
+- 习得基础功法，展现超强悟性
+- 与司马云首次较量，不分胜负
+- 救助受伤的林月，结下善缘
+
+第二卷：宗门风云
+第三章：宗门大比
+- 参加青云门内门弟子选拔
+- 施展独特功法，技惊四座
+- 获得重要传承机缘
+
+第四章：危机四伏
+- 发现宗门内有奸细
+- 林月遭遇暗算，叶天相救
+- 司马云暗中相助，化解危机
+
+第三卷：世家争锋
+第五章：世家较量
+- 四大世家会武开始
+- 叶天代表青云门出战
+- 与司马云再次对决，平分秋色
+
+第六章：身世之谜
+- 神秘高手现身，点破叶天身世
+- 身具上古血脉，引发各方觊觎
+- 林月相助，躲过追杀
+
+第四卷：正邪之战
+第七章：邪道入侵
+- 幽冥教掀起滔天血浪
+- 叶天临危受命，率队迎敌
+- 发现幽冥教与身世有关
+
+第八章：真相大白
+- 身世之谜水落石出
+- 与幽冥教决战，重创敌首
+- 司马云相助，共同守护正道
+
+第五卷：飞升之路
+第九章：突破桎梏
+- 突破灵境，踏入仙境
+- 与林月情定三生
+- 携手共踏长生路
+
+终章：道法自然
+- 飞升在即，处理世俗牵绊
+- 与挚爱道侣共赴仙途
+- 展望无尽的修真大道`;
+            break;
+        default:
+            outlineTemplate = `《${title}》小说大纲
+
+第一章：引子
+- [开篇情节]
+- [主要人物登场]
+- [初始矛盾埋伏]
+
+第二章：矛盾起
+- [主要冲突展开]
+- [人物关系发展]
+- [情节推进要点]
+
+第三章：波折
+- [第一个转折点]
+- [矛盾升级]
+- [人物成长]
+
+第四章：高潮
+- [主要冲突爆发]
+- [关键抉择]
+- [重要转折]
+
+第五章：结局
+- [矛盾解决]
+- [人物结局]
+- [主题升华]
+
+[根据具体类型补充更多章节内容...]`;
+    }
+    
+    // 模拟生成过程
+    setTimeout(() => {
+        if (outlineText) {
+            // 生成完成后的效果
+            outlineText.style.opacity = '1';
+            outlineText.disabled = false;
+            outlineText.value = outlineTemplate;
+            
+            // 移除旧的提示
+            const oldTip = document.querySelector('#step3 .alert-info');
+            if (oldTip) {
+                oldTip.remove();
+            }
+            
+            // 添加编辑提示
+            const editTip = document.createElement('div');
+            editTip.className = 'alert alert-info mt-2';
+            editTip.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>✓ 小说大纲已生成完成！</strong><br>
+                        <small>您可以：</small>
+                        <ul class="mb-0">
+                            <li>直接编辑上方文本框修改内容</li>
+                            <li>点击"重新生成"尝试新的版本</li>
+                            <li>点击"保存内容"保存当前版本</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+            outlineText.parentNode.appendChild(editTip);
             
             // 恢复重新生成按钮
             if (regenerateBtn) {
