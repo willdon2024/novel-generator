@@ -218,6 +218,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // 显示剩余天数
         const remainingDays = Math.ceil((appState.authExpiry - new Date()) / (1000 * 60 * 60 * 24));
         console.log(`授权码有效，剩余${remainingDays}天`);
+        
+        // 恢复之前的状态
+        restoreState();
     }
     
     // 绑定验证按钮点击事件
@@ -306,6 +309,9 @@ function nextStep(currentStepNumber) {
                 }
             }, 100);
         }
+        
+        // 保存当前状态
+        saveCurrentState();
     }
 }
 
@@ -329,6 +335,9 @@ function prevStep(currentStepNumber) {
         prevContent.classList.add('show', 'active');
         progressManager.prevStep();
         console.log('内容已切换到步骤:', currentStepNumber - 1);
+        
+        // 保存当前状态
+        saveCurrentState();
     }
 }
 
@@ -446,4 +455,84 @@ function generateBackground() {
         }
         hideLoading();
     }, 12000); // 设置较长的等待时间以模拟实际生成过程
-} 
+}
+
+// 保存当前状态到 localStorage
+function saveCurrentState() {
+    const state = {
+        currentStep: progressManager.currentStep,
+        novelTitle: document.getElementById('novelTitle')?.value || '',
+        novelGenre: document.getElementById('novelGenre')?.value || '',
+        backgroundText: document.getElementById('backgroundText')?.value || '',
+        outlineText: document.getElementById('outlineText')?.value || '',
+        lastUpdated: new Date().toISOString()
+    };
+    localStorage.setItem('novelGeneratorState', JSON.stringify(state));
+    console.log('状态已保存:', state);
+}
+
+// 从 localStorage 恢复状态
+function restoreState() {
+    const savedState = localStorage.getItem('novelGeneratorState');
+    if (savedState) {
+        const state = JSON.parse(savedState);
+        console.log('恢复状态:', state);
+        
+        // 恢复标题和类型
+        if (state.novelTitle) {
+            const titleInput = document.getElementById('novelTitle');
+            if (titleInput) titleInput.value = state.novelTitle;
+        }
+        if (state.novelGenre) {
+            const genreSelect = document.getElementById('novelGenre');
+            if (genreSelect) genreSelect.value = state.novelGenre;
+        }
+        
+        // 恢复背景内容
+        if (state.backgroundText) {
+            const backgroundText = document.getElementById('backgroundText');
+            if (backgroundText) backgroundText.value = state.backgroundText;
+        }
+        
+        // 恢复大纲内容
+        if (state.outlineText) {
+            const outlineText = document.getElementById('outlineText');
+            if (outlineText) outlineText.value = state.outlineText;
+        }
+        
+        // 恢复到正确的步骤
+        if (state.currentStep > 1) {
+            // 首先显示主界面
+            if (appState.isAuthorized) {
+                document.getElementById('authPanel').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+            }
+            
+            // 然后恢复到正确的步骤
+            for (let i = 1; i < state.currentStep; i++) {
+                const currentStepItem = document.querySelector(`.step-item[data-step="${i}"]`);
+                const nextStepItem = document.querySelector(`.step-item[data-step="${i + 1}"]`);
+                if (currentStepItem && nextStepItem) {
+                    currentStepItem.classList.remove('active');
+                    currentStepItem.classList.add('completed');
+                    nextStepItem.classList.add('active');
+                }
+                
+                const currentContent = document.getElementById(`step${i}`);
+                const nextContent = document.getElementById(`step${i + 1}`);
+                if (currentContent && nextContent) {
+                    currentContent.classList.remove('show', 'active');
+                    nextContent.classList.add('show', 'active');
+                }
+            }
+            progressManager.currentStep = state.currentStep;
+        }
+    }
+}
+
+// 在内容变化时保存状态
+document.addEventListener('input', function(e) {
+    if (['novelTitle', 'novelGenre', 'backgroundText', 'outlineText'].includes(e.target.id)) {
+        saveCurrentState();
+    }
+}); 
