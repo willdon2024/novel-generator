@@ -1173,9 +1173,38 @@ ${currentContent}
                     return;
                 }
                 
-                // 如果是第一步，生成背景
-                if (currentStep === 1) {
-                    await generateBackground();
+                // 根据当前步骤执行相应操作
+                switch(currentStep) {
+                    case 1:
+                        // 生成背景
+                        await generateBackground();
+                        break;
+                    case 2:
+                        // 验证背景内容
+                        const background = document.getElementById('backgroundContent').value.trim();
+                        if (!background || background === '正在生成故事背景，请稍候...') {
+                            throw new Error('请先生成或完善故事背景');
+                        }
+                        // 生成大纲
+                        await generateOutline();
+                        break;
+                    case 3:
+                        // 验证大纲内容
+                        const outline = document.getElementById('outlineContent').value.trim();
+                        if (!outline || outline === '正在生成故事大纲，请稍候...') {
+                            throw new Error('请先生成或完善故事大纲');
+                        }
+                        // 生成章节选项
+                        generateChapterOptions();
+                        break;
+                    case 4:
+                        // 验证是否有已生成的章节
+                        if (Object.keys(savedChapters).length === 0) {
+                            if (!confirm('您还没有生成任何章节内容，确定要继续吗？')) {
+                                return;
+                            }
+                        }
+                        break;
                 }
                 
                 // 更新步骤
@@ -1234,10 +1263,22 @@ ${currentContent}
                         {
                             role: "user",
                             content: `请为题为《${title}》的${novelType}小说创作详细的背景设定，包括：
-1. 世界观/时代背景
-2. 主要人物介绍（性格特点、外貌特征、身份背景）
-3. 重要人物关系网络
-4. 核心矛盾/冲突设定
+
+1. 详细的故事背景设定（至少500字）
+   - 世界观/时代背景
+   - 社会环境/文化背景
+   - 特殊设定/规则
+
+2. 主要人物介绍（每个主要人物至少200字）
+   - 性格特点
+   - 外貌特征
+   - 身份背景
+   - 人物关系网络
+
+3. 核心矛盾/冲突设定
+   - 主要矛盾
+   - 次要矛盾
+   - 内外冲突
 
 要求：
 1. 内容详实具体
@@ -1284,20 +1325,38 @@ ${currentContent}
 ${background}
 
 要求：
-1. 规划完整的故事架构（序章-正文-结局）
-2. 设计合理的情节发展和转折点
-3. 每个章节都要有明确的剧情推进
-4. 注意故事节奏的控制
-5. 确保与背景设定的一致性
-请按章节列出大纲，每个章节都要有简要的内容概述。`
+1. 故事情节要符合${novelType}的特点和规律
+2. 人物性格鲜明，故事情节吸引人
+3. 按照序章+正文（12-15章）的结构来写
+4. 每个情节转折要符合逻辑，有因果关系
+5. 结尾要有意想不到的转折或深刻的寓意
+6. 列出3个重要的故事转折点，并说明这些转折点分别发生在第几章
+7. 故事结构按照"序章-发展-高潮-结局"四个阶段展开，每个阶段3-4章
+
+请按以下格式输出：
+一、整体架构
+[列出故事的整体框架和主要脉络]
+
+二、分章节大纲
+第一章：[章节标题]
+[详细内容概述，200字左右]
+
+[依此类推...]
+
+三、重要转折点
+1. [第X章] - [转折点描述]
+2. [第X章] - [转折点描述]
+3. [第X章] - [转折点描述]`
                         }
-                    ]
+                    ],
+                    temperature: 0.8,
+                    max_tokens: 3000
                 });
                 
                 document.getElementById('outlineContent').value = response.choices[0].message.content;
             } catch (error) {
                 console.error('Error:', error);
-                document.getElementById('outlineContent').value = '生成失败，请稍后重试';
+                throw new Error('生成大纲失败：' + error.message);
             }
         }
 
