@@ -327,6 +327,59 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+    
+    // 绑定导出Word按钮
+    const exportWordBtns = document.querySelectorAll('.export-word-btn');
+    exportWordBtns.forEach(button => {
+        button.addEventListener('click', function() {
+            const currentStep = parseInt(this.closest('.tab-pane').id.replace('step', ''));
+            const textArea = document.getElementById(currentStep === 2 ? 'backgroundText' : 'outlineText');
+            const title = document.getElementById('novelTitle').value || '小说';
+            
+            if (textArea && textArea.value.trim()) {
+                const content = `<div style="font-family: Arial, sans-serif; line-height: 1.6;">
+                    <h1 style="text-align: center;">${title}</h1>
+                    <div style="white-space: pre-wrap;">${textArea.value}</div>
+                </div>`;
+                const filename = `${title}_${currentStep === 2 ? '背景' : '大纲'}.doc`;
+                exportToWord(content, filename);
+            } else {
+                alert('没有可导出的内容！');
+            }
+        });
+    });
+    
+    // 绑定导出Text按钮
+    const exportTextBtns = document.querySelectorAll('.export-text-btn');
+    exportTextBtns.forEach(button => {
+        button.addEventListener('click', function() {
+            const currentStep = parseInt(this.closest('.tab-pane').id.replace('step', ''));
+            const textArea = document.getElementById(currentStep === 2 ? 'backgroundText' : 'outlineText');
+            const title = document.getElementById('novelTitle').value || '小说';
+            
+            if (textArea && textArea.value.trim()) {
+                const filename = `${title}_${currentStep === 2 ? '背景' : '大纲'}.txt`;
+                exportToText(textArea.value, filename);
+            } else {
+                alert('没有可导出的内容！');
+            }
+        });
+    });
+    
+    // 绑定复制内容按钮
+    const copyBtns = document.querySelectorAll('.copy-btn');
+    copyBtns.forEach(button => {
+        button.addEventListener('click', function() {
+            const currentStep = parseInt(this.closest('.tab-pane').id.replace('step', ''));
+            const textArea = document.getElementById(currentStep === 2 ? 'backgroundText' : 'outlineText');
+            
+            if (textArea && textArea.value.trim()) {
+                copyToClipboard(textArea.value);
+            } else {
+                alert('没有可复制的内容！');
+            }
+        });
+    });
 });
 
 // 步骤切换函数
@@ -884,4 +937,56 @@ document.addEventListener('input', function(e) {
     if (['novelTitle', 'novelGenre', 'backgroundText', 'outlineText'].includes(e.target.id)) {
         saveCurrentState();
     }
-}); 
+});
+
+// 导出Word文档
+function exportToWord(content, filename) {
+    const header = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">';
+    const footer = '</html>';
+    const sourceHTML = header + content + footer;
+    
+    const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML);
+    const fileDownload = document.createElement("a");
+    document.body.appendChild(fileDownload);
+    fileDownload.href = source;
+    fileDownload.download = filename;
+    fileDownload.click();
+    document.body.removeChild(fileDownload);
+}
+
+// 导出Text文件
+function exportToText(content, filename) {
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = window.URL.createObjectURL(blob);
+    const fileDownload = document.createElement("a");
+    document.body.appendChild(fileDownload);
+    fileDownload.href = url;
+    fileDownload.download = filename;
+    fileDownload.click();
+    document.body.removeChild(fileDownload);
+    window.URL.revokeObjectURL(url);
+}
+
+// 复制内容到剪贴板
+function copyToClipboard(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => {
+            alert('内容已复制到剪贴板！');
+        }).catch(() => {
+            alert('复制失败，请手动复制。');
+        });
+    } else {
+        // 降级方案
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            alert('内容已复制到剪贴板！');
+        } catch (err) {
+            alert('复制失败，请手动复制。');
+        }
+        document.body.removeChild(textArea);
+    }
+} 
