@@ -380,6 +380,23 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+    
+    // 绑定编辑按钮
+    const editButtons = document.querySelectorAll('.edit-btn');
+    editButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const currentStep = parseInt(this.closest('.tab-pane').id.replace('step', ''));
+            const textArea = document.getElementById(currentStep === 2 ? 'backgroundText' : 'outlineText');
+            
+            if (textArea) {
+                textArea.disabled = !textArea.disabled;
+                this.textContent = textArea.disabled ? '编辑内容' : '完成编辑';
+                if (!textArea.disabled) {
+                    textArea.focus();
+                }
+            }
+        });
+    });
 });
 
 // 步骤切换函数
@@ -510,147 +527,201 @@ function hideLoading() {
 
 // 生成故事背景
 function generateBackground() {
-    const title = document.getElementById('novelTitle').value;
-    const genre = document.getElementById('novelGenre').value;
+    console.log('开始生成故事背景');
     const backgroundText = document.getElementById('backgroundText');
-    const regenerateBtn = document.querySelector('.regenerate-btn');
+    const regenerateBtn = document.querySelector('#step2 .regenerate-btn');
+    const editBtn = document.querySelector('#step2 .edit-btn');
     
-    // 禁用重新生成按钮
-    if (regenerateBtn) {
+    if (backgroundText && regenerateBtn) {
+        // 禁用重新生成按钮
         regenerateBtn.disabled = true;
-        regenerateBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 生成中...';
-    }
-    
-    // 显示初始状态
-    if (backgroundText) {
-        backgroundText.value = '系统正在构思故事情节，请稍候...';
-        backgroundText.style.opacity = '0.7';
+        regenerateBtn.innerHTML = '生成中...';
+        
+        // 禁用文本框编辑
         backgroundText.disabled = true;
+        backgroundText.style.opacity = '0.7';
+        backgroundText.value = '正在生成故事背景和人物关系，请稍候...';
+        
+        // 显示加载状态
+        showLoading('正在生成故事背景...');
+        
+        // 获取小说类型
+        const genre = document.getElementById('novelGenre').value;
+        
+        // 根据类型生成不同的背景模板
+        let backgroundTemplate = '';
+        if (genre === '都市生活') {
+            backgroundTemplate = generateUrbanLifeBackground();
+        } else if (genre === '玄幻修仙') {
+            backgroundTemplate = generateFantasyBackground();
+        } else {
+            backgroundTemplate = generateGeneralBackground();
+        }
+        
+        // 模拟生成过程
+        setTimeout(() => {
+            if (backgroundText) {
+                // 生成完成后的效果
+                backgroundText.style.opacity = '1';
+                backgroundText.disabled = true; // 默认不可编辑
+                backgroundText.value = backgroundTemplate;
+                
+                // 移除旧的提示
+                const oldTip = document.querySelector('.alert-info');
+                if (oldTip) {
+                    oldTip.remove();
+                }
+                
+                // 添加编辑提示
+                const editTip = document.createElement('div');
+                editTip.className = 'alert alert-info mt-2';
+                editTip.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>✓ 背景故事已生成完成！</strong><br>
+                            <small>您可以：</small>
+                            <ul class="mb-0">
+                                <li>点击"编辑内容"开始修改</li>
+                                <li>点击"重新生成"尝试新的版本</li>
+                                <li>点击"保存内容"保存当前版本</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                backgroundText.parentNode.appendChild(editTip);
+                
+                // 恢复重新生成按钮
+                if (regenerateBtn) {
+                    regenerateBtn.disabled = false;
+                    regenerateBtn.innerHTML = '重新生成';
+                }
+            }
+            hideLoading();
+        }, 12000);
     }
-    
-    // 显示加载状态
-    showLoading('正在启动生成引擎...');
-    
-    // 生成示例内容
-    console.log('生成故事背景:', { title, genre });
-    
-    // 根据不同类型生成不同的背景模板
-    let backgroundTemplate = '';
-    switch(genre) {
-        case '都市生活':
-            backgroundTemplate = `《${title}》是一部现代都市生活小说，故事发生在繁华的大都市中。
+}
 
-故事背景：
-故事设定在当代中国一线城市，主要围绕着年轻人的职场与生活展开。城市的快节奏、高压力的工作环境，以及不断变化的人际关系构成了故事的基本背景。
+// 生成都市生活类型的背景
+function generateUrbanLifeBackground() {
+    const templates = [
+        `故事背景：
+现代都市商业社会，一线城市的金融中心。
 
 主要人物：
-1. 主角：李好，28岁，某互联网公司的产品经理。性格开朗但内心敏感，工作能力强但常常陷入理想与现实的矛盾中。
-
-2. 男主角：陈远，32岁，创业公司CEO。事业心强，性格沉稳，但在感情方面显得有些笨拙。
-
-3. 竞争对手：张明，30岁，同公司市场部经理。表面热情，实则处处与主角竞争。
-
-4. 闺蜜：王小美，27岁，时尚博主。开朗活泼，是主角的知心好友和情感顾问。
+1. 林志远（男主）：28岁，投资公司分析师，事业心强，理性果断
+2. 苏梦琪（女主）：26岁，新媒体创业者，独立坚韧，充满创意
+3. 陈天明（对手）：35岁，投资公司总监，城府深，表面谦和
+4. 张雨晴（闺蜜）：27岁，广告公司主管，热心开朗，为人仗义
 
 人物关系：
-- 李好与陈远在一次产品发布会上相识，两人因工作多次接触，产生好感
-- 张明暗中觊觎李好的项目，同时对她也有好感，形成三角关系
-- 王小美作为李好的闺蜜，在她职场和感情问题上都给予支持和建议
-- 各人物之间的关系随着职场竞争和感情发展而变得复杂
-
-故事核心冲突：
-主角在追求事业成功与个人幸福之间寻找平衡，同时面临职场竞争、创业机遇和感情抉择的多重考验。`;
-            break;
-        case '玄幻修仙':
-            backgroundTemplate = `《${title}》是一部东方玄幻修仙小说，故事背景设定在一个充满灵力的修真世界。
-
-世界背景：
-这是一个被称为"九州大陆"的神秘世界，灵气充沛，修真者可以通过修炼提升境界，追求长生之道。世界分为凡境、灵境、仙境三大境界，每个境界又分为九重天。
-
-主要人物：
-1. 主角：叶天，18岁，灵根天赋极高但出身低微的少年。性格坚韧，意志坚定，拥有神秘的传承。
-
-2. 师尊：云霄真人，千年修为的大能，性格古怪但心怀慈悲，收主角为徒。
-
-3. 对手：司马云，世家大族继承人，天赋横溢，与主角既是对手又有暗中联系。
-
-4. 女主：林月，仙门大族千金，医毒双绝，性格清冷但内心善良。
-
-势力分布：
-- 九大仙门：青云门、御剑宗、丹鼎派等
-- 四大世家：司马、林、洛、姜
-- 魔道势力：幽冥教、血魔宗
-
-人物关系：
-- 叶天拜入青云门，成为云霄真人关门弟子
-- 与司马云在各大比试中多次交手，既有竞争又有惺惺相惜
-- 在一次历练中救下林月，两人渐生情愫
-- 身世之谜与各大势力都有着千丝万缕的联系
+- 林志远和苏梦琪在一次创业路演中相识，产生好感
+- 陈天明暗中觊觎苏梦琪的创业项目，对林志远心生嫉妒
+- 张雨晴是苏梦琪的闺蜜，也是林志远的创业顾问
 
 核心矛盾：
-主角在追求长生大道的同时，需要解开自身身世之谜，同时面对正邪势力的明争暗斗。`;
-            break;
-        default:
-            backgroundTemplate = `《${title}》是一部${genre}小说。
+商业与爱情的双重考验，职场阴谋与个人成长的碰撞。`,
 
-故事背景：
-[这里是根据类型自动生成的详细背景描述...]
+        `故事背景：
+魔都浦东，一座充满机遇与挑战的现代化都市。
 
 主要人物：
-1. [主角姓名]：[年龄]，[身份]，[性格特点]
-2. [重要配角]：[简要描述]
-3. [对手/竞争者]：[简要描述]
-4. [其他关键人物]：[简要描述]
+1. 秦明（男主）：30岁，互联网公司技术总监，低调内敛，技术过人
+2. 李雨欣（女主）：25岁，海归创业者，开朗自信，富有远见
+3. 王博（竞争对手）：32岁，行业独角兽CEO，野心勃勃，手段强硬
+4. 赵小婷（助手）：28岁，项目经理，能力出众，忠诚可靠
 
 人物关系：
-- [主要人物之间的关系描述]
-- [次要人物之间的关系描述]
-- [潜在的矛盾点]
+- 秦明和李雨欣因一次技术合作结缘，暗生情愫
+- 王博觊觎李雨欣的创新技术，试图恶意收购
+- 赵小婷是秦明的得力助手，帮助两人对抗商业阴谋
 
-核心冲突：
-[故事的主要矛盾和冲突]`;
-    }
+核心矛盾：
+创业梦想与商业现实的碰撞，纯粹技术与资本角逐的较量。`
+    ];
     
-    // 模拟生成过程
-    setTimeout(() => {
-        if (backgroundText) {
-            // 生成完成后的效果
-            backgroundText.style.opacity = '1';
-            backgroundText.disabled = false;
-            backgroundText.value = backgroundTemplate;
-            
-            // 移除旧的提示
-            const oldTip = document.querySelector('.alert-info');
-            if (oldTip) {
-                oldTip.remove();
-            }
-            
-            // 添加编辑提示
-            const editTip = document.createElement('div');
-            editTip.className = 'alert alert-info mt-2';
-            editTip.innerHTML = `
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong>✓ 背景故事已生成完成！</strong><br>
-                        <small>您可以：</small>
-                        <ul class="mb-0">
-                            <li>直接编辑上方文本框修改内容</li>
-                            <li>点击"重新生成"尝试新的版本</li>
-                            <li>点击"保存内容"保存当前版本</li>
-                        </ul>
-                    </div>
-                </div>
-            `;
-            backgroundText.parentNode.appendChild(editTip);
-            
-            // 恢复重新生成按钮
-            if (regenerateBtn) {
-                regenerateBtn.disabled = false;
-                regenerateBtn.innerHTML = '重新生成';
-            }
-        }
-        hideLoading();
-    }, 12000);
+    return templates[Math.floor(Math.random() * templates.length)];
+}
+
+// 生成玄幻修仙类型的背景
+function generateFantasyBackground() {
+    const templates = [
+        `故事背景：
+九天仙界，一个充满灵力与神秘的修真世界。
+
+主要人物：
+1. 叶青云（男主）：天赋异禀的散修，身怀神秘血脉
+2. 洛仙儿（女主）：仙门大族嫡女，冰雪聪明，性格清冷
+3. 魔尊白泽（反派）：上古魔门之主，实力通天，野心勃勃
+4. 道玄真人（师尊）：隐世高人，收男主为徒，深藏不露
+
+人物关系：
+- 叶青云与洛仙儿因机缘相识，命运相连
+- 魔尊白泽觊觎叶青云体内的神秘血脉
+- 道玄真人暗中指引，守护众人命运
+
+核心矛盾：
+修真大道与情感羁绊的抉择，正道与魔道的终极对决。`,
+
+        `故事背景：
+太虚界，一方广袤无垠的修仙世界。
+
+主要人物：
+1. 林逸（男主）：废材少年，觉醒上古传承
+2. 姜雪（女主）：丹宗圣女，医毒双绝，性格孤傲
+3. 玄阴老祖（大反派）：远古魔头，图谋不轨
+4. 青云子（神秘人）：世外高人，暗中相助
+
+人物关系：
+- 林逸与姜雪因丹药结缘，渐生情愫
+- 玄阴老祖觊觎林逸的上古传承，欲夺舍重生
+- 青云子是林逸前世好友，转世后暗中守护
+
+核心矛盾：
+修仙之路与情感抉择，守护苍生与个人追求的平衡。`
+    ];
+    
+    return templates[Math.floor(Math.random() * templates.length)];
+}
+
+// 生成通用类型的背景
+function generateGeneralBackground() {
+    const templates = [
+        `故事背景：
+现代都市与奇幻元素交织的世界。
+
+主要人物：
+1. 主角：25岁，普通上班族，意外获得特殊能力
+2. 女主：23岁，神秘组织成员，性格独特
+3. 反派：身份成谜，具有强大力量
+4. 引路人：主角的神秘长辈，知晓许多秘密
+
+人物关系：
+- 主角和女主因特殊事件相识
+- 反派与主角有着不解之缘
+- 引路人暗中保护主角成长
+
+核心矛盾：
+能力觉醒后的人生抉择，正与邪的较量。`,
+
+        `故事背景：
+架空历史世界，科技与玄学并存。
+
+主要人物：
+1. 男主：20岁，普通学生，意外卷入大事件
+2. 女主：19岁，特殊组织成员，身手不凡
+3. 对手：组织高层，表面正义，暗藏阴谋
+4. 导师：神秘老者，教导主角成长
+
+人物关系：
+- 男女主因任务相识，共同成长
+- 对手处处针对主角，图谋不轨
+- 导师是主角命运的引路人
+
+核心矛盾：
+个人成长与世界真相的探索，正义与邪恶的对抗。`
+    ];
+    
+    return templates[Math.floor(Math.random() * templates.length)];
 }
 
 // 生成小说大纲
