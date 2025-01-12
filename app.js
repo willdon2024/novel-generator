@@ -238,6 +238,26 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         console.error('找不到验证按钮元素');
     }
+    
+    // 绑定重新生成按钮
+    const regenerateBtn = document.querySelector('.regenerate-btn');
+    if (regenerateBtn) {
+        regenerateBtn.addEventListener('click', function() {
+            generateBackground();
+        });
+    }
+    
+    // 绑定保存按钮
+    const saveBtn = document.querySelector('.save-btn');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', function() {
+            const backgroundText = document.getElementById('backgroundText');
+            if (backgroundText && backgroundText.value.trim()) {
+                // 这里添加保存逻辑
+                alert('内容已保存！');
+            }
+        });
+    }
 });
 
 // 步骤切换函数
@@ -320,18 +340,35 @@ function showLoading(message) {
     
     if (progressDiv && loadingText && progressBar) {
         progressDiv.style.display = 'block';
-        loadingText.textContent = message;
+        loadingText.innerHTML = `${message}<br><small class="text-muted">预计需要1-2分钟，请耐心等待...</small>`;
         progressBar.style.width = '0%';
         
-        // 模拟进度
+        // 添加动画效果
+        loadingText.classList.add('loading-animation');
+        
+        // 模拟进度，每3秒更新一次状态
         let progress = 0;
+        const messages = [
+            '正在分析故事背景...',
+            '正在构建人物关系...',
+            '正在完善故事细节...',
+            '即将完成生成...'
+        ];
+        let messageIndex = 0;
+        
         const interval = setInterval(() => {
             progress += 5;
             if (progress > 90) {
                 clearInterval(interval);
             }
             progressBar.style.width = `${progress}%`;
-        }, 200);
+            
+            // 每25%更新一次提示消息
+            if (progress % 25 === 0 && messageIndex < messages.length) {
+                loadingText.innerHTML = `${messages[messageIndex]}<br><small class="text-muted">已完成 ${progress}%，请继续等待...</small>`;
+                messageIndex++;
+            }
+        }, 3000); // 每3秒更新一次进度
     }
 }
 
@@ -347,16 +384,66 @@ function hideLoading() {
 function generateBackground() {
     const title = document.getElementById('novelTitle').value;
     const genre = document.getElementById('novelGenre').value;
+    const backgroundText = document.getElementById('backgroundText');
+    const regenerateBtn = document.querySelector('.regenerate-btn');
+    
+    // 禁用重新生成按钮
+    if (regenerateBtn) {
+        regenerateBtn.disabled = true;
+        regenerateBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 生成中...';
+    }
+    
+    // 显示初始状态
+    if (backgroundText) {
+        backgroundText.value = '系统正在构思故事情节，请稍候...';
+        backgroundText.style.opacity = '0.7';
+        backgroundText.disabled = true; // 生成过程中禁用编辑
+    }
+    
+    // 显示加载状态
+    showLoading('正在启动生成引擎...');
     
     // 这里添加实际的生成逻辑
     console.log('生成故事背景:', { title, genre });
     
     // 模拟生成过程
     setTimeout(() => {
-        const backgroundText = document.getElementById('backgroundText');
         if (backgroundText) {
-            backgroundText.value = `《${title}》是一部${genre}小说...\n\n正在构思故事背景和人物关系...`;
+            // 生成完成后的效果
+            backgroundText.style.opacity = '1';
+            backgroundText.disabled = false; // 允许编辑
+            backgroundText.value = `《${title}》是一部${genre}小说...\n\n这里是生成的故事背景和人物关系...`;
+            
+            // 移除旧的提示（如果存在）
+            const oldTip = document.querySelector('.alert-info');
+            if (oldTip) {
+                oldTip.remove();
+            }
+            
+            // 添加编辑提示
+            const editTip = document.createElement('div');
+            editTip.className = 'alert alert-info mt-2';
+            editTip.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>✓ 背景故事已生成完成！</strong><br>
+                        <small>您可以：</small>
+                        <ul class="mb-0">
+                            <li>直接编辑上方文本框修改内容</li>
+                            <li>点击"重新生成"尝试新的版本</li>
+                            <li>点击"保存内容"保存当前版本</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+            backgroundText.parentNode.appendChild(editTip);
+            
+            // 恢复重新生成按钮
+            if (regenerateBtn) {
+                regenerateBtn.disabled = false;
+                regenerateBtn.innerHTML = '重新生成';
+            }
         }
         hideLoading();
-    }, 3000);
+    }, 12000); // 设置较长的等待时间以模拟实际生成过程
 } 
