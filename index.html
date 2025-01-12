@@ -224,35 +224,177 @@
             margin: 0;
             min-width: 100px;
         }
+        /* 添加步骤指示器样式 */
+        .steps-indicator {
+            margin: 2rem 0;
+            padding: 0;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+        }
+        
+        .steps-indicator::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #dee2e6;
+            z-index: 1;
+        }
+        
+        .step-item {
+            position: relative;
+            z-index: 2;
+            background: white;
+            padding: 0 1rem;
+            text-align: center;
+            flex: 1;
+        }
+        
+        .step-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #dee2e6;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem;
+            font-weight: bold;
+        }
+        
+        .step-title {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin: 0;
+        }
+        
+        .step-item.active .step-number {
+            background: #0d6efd;
+            color: white;
+        }
+        
+        .step-item.active .step-title {
+            color: #0d6efd;
+            font-weight: bold;
+        }
+        
+        .step-item.completed .step-number {
+            background: #198754;
+            color: white;
+        }
+        
+        .step-content {
+            display: none;
+        }
+        
+        .step-content.active {
+            display: block;
+        }
+        
+        .step-actions {
+            margin-top: 1rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+        
+        .intervention-panel {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .intervention-panel h6 {
+            margin-bottom: 1rem;
+            color: #0d6efd;
+        }
+        
+        /* 添加动画效果 */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .step-content.active {
+            animation: fadeIn 0.3s ease-in-out;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>小说生成器</h1>
-        <div class="card mb-4">
+        
+        <!-- 授权验证部分 -->
+        <div class="card mb-4" id="authCard">
             <div class="card-body">
-                <form id="novelForm">
-                    <div class="mb-3">
-                        <label for="authCode" class="form-label">授权码</label>
-                        <div class="api-key-group">
-                            <input type="password" class="form-control" id="authCode" required>
-                            <button type="button" class="btn btn-primary" id="verifyAuth" style="min-width: 80px; line-height: 1;">验证</button>
-                        </div>
-                        <small class="text-muted">请输入您的授权码</small>
+                <div class="mb-3">
+                    <label for="authCode" class="form-label">授权码</label>
+                    <div class="api-key-group">
+                        <input type="password" class="form-control" id="authCode" required>
+                        <button type="button" class="btn btn-primary" id="verifyAuth">验证</button>
                     </div>
-                    <div id="mainContent" style="display: none;">
-                        <div class="mb-3">
-                            <label for="apiKey" class="form-label">Moonshot API Key</label>
-                            <div class="api-key-group">
-                                <input type="password" class="form-control" id="apiKey" required>
-                                <button type="button" class="btn btn-primary" id="confirmApiKey" style="min-width: 80px; line-height: 1;">确认</button>
+                    <small class="text-muted">请输入您的授权码</small>
                 </div>
-                            <small class="text-muted">请输入你的 Moonshot API Key</small>
             </div>
+        </div>
+        
+        <!-- 主要内容部分 -->
+        <div id="mainContent" style="display: none;">
+            <!-- API Key 设置 -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="apiKey" class="form-label">Moonshot API Key</label>
+                        <div class="api-key-group">
+                            <input type="password" class="form-control" id="apiKey" required>
+                            <button type="button" class="btn btn-primary" id="confirmApiKey">确认</button>
+                        </div>
+                        <small class="text-muted">请输入你的 Moonshot API Key</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 步骤指示器 -->
+            <ul class="steps-indicator">
+                <li class="step-item active" data-step="1">
+                    <div class="step-number">1</div>
+                    <p class="step-title">确认标题</p>
+                </li>
+                <li class="step-item" data-step="2">
+                    <div class="step-number">2</div>
+                    <p class="step-title">故事背景</p>
+                </li>
+                <li class="step-item" data-step="3">
+                    <div class="step-number">3</div>
+                    <p class="step-title">生成大纲</p>
+                </li>
+                <li class="step-item" data-step="4">
+                    <div class="step-number">4</div>
+                    <p class="step-title">章节生成</p>
+                </li>
+                <li class="step-item" data-step="5">
+                    <div class="step-number">5</div>
+                    <p class="step-title">内容完善</p>
+                </li>
+            </ul>
+            
+            <!-- 步骤内容 -->
+            <div class="card">
+                <div class="card-body">
+                    <!-- 步骤1：确认标题 -->
+                    <div class="step-content active" id="step1">
+                        <h5 class="card-title">第一步：确认小说标题和类型</h5>
                         <div class="mb-3">
                             <label for="title" class="form-label">小说标题</label>
                             <input type="text" class="form-control" id="title" required placeholder="请输入小说标题">
-        </div>
+                        </div>
                         <div class="mb-3">
                             <label for="novelType" class="form-label">小说类型</label>
                             <select class="form-select" id="novelType" required>
@@ -289,69 +431,106 @@
                                 </optgroup>
                             </select>
                         </div>
-                        <button type="submit" class="btn btn-primary" id="generateBtn">
-                            <span class="d-flex align-items-center justify-content-center">
-                                <span>开始生成</span>
-                            </span>
-                        </button>
-                    </div>
-                </form>
-                </div>
-            </div>
-            
-                <div class="card">
-                    <div class="card-body">
-                <h5 class="card-title">内容编辑</h5>
-                            
-                <div class="progress">
-                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                        <div class="step-actions">
+                            <button class="btn btn-primary" onclick="nextStep(1)">下一步</button>
                         </div>
-                        
-                <div class="mode-switch">
-                    <div class="btn-group w-100">
-                        <input type="radio" class="btn-check" name="mode" id="outlineMode" checked>
-                        <label class="btn btn-outline-primary" for="outlineMode">大纲模式</label>
-                        
-                        <input type="radio" class="btn-check" name="mode" id="contentMode">
-                        <label class="btn btn-outline-primary" for="contentMode">章节内容模式</label>
+                    </div>
+                    
+                    <!-- 步骤2：故事背景 -->
+                    <div class="step-content" id="step2">
+                        <h5 class="card-title">第二步：确认故事背景和人物关系</h5>
+                        <div class="content-area-wrapper">
+                            <textarea class="content-area" id="backgroundContent" placeholder="正在生成故事背景和人物关系..."></textarea>
+                        </div>
+                        <div class="intervention-panel">
+                            <h6>人工干涉</h6>
+                            <div class="input-group mb-3">
+                                <input type="text" class="form-control" id="backgroundModification" placeholder="输入修改建议，例如：'增加更多人物背景'">
+                                <button class="btn btn-primary" onclick="applyBackgroundModification()">应用修改</button>
+                            </div>
+                            <div class="suggestion-tags">
+                                <button class="btn btn-sm btn-outline-secondary" onclick="selectBackgroundSuggestion(this)">增加人物背景</button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="selectBackgroundSuggestion(this)">调整世界观设定</button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="selectBackgroundSuggestion(this)">补充人物关系</button>
                             </div>
                         </div>
-
-                <div class="edit-tools">
-                    <button class="btn btn-primary" id="saveOutline" disabled>保存大纲修改</button>
-                    <button class="btn btn-secondary" id="resetOutline">重置修改</button>
-                    <button class="btn btn-success" id="continueGenerate" style="display: none;">继续生成</button>
-                    <button class="btn btn-success" id="generateChapter" style="display: none;">生成章节内容</button>
-                                </div>
-                
-                <div class="chapter-select" style="display: none; margin-bottom: 1rem;">
-                    <label for="chapterSelect" class="form-label">选择章节</label>
-                    <select class="form-select" id="chapterSelect">
-                        <option value="" disabled selected>请选择要生成的章节</option>
-                    </select>
-                            </div>
-                
-                <textarea class="content-area" id="contentArea" placeholder="这里将显示生成的内容..."></textarea>
-                
-                <div class="outline-modification mb-3" style="background: #f8f9fa; padding: 1rem; border-radius: 10px; margin-top: 1rem;">
-                    <h6 class="mb-2">人工干涉</h6>
-                    <div class="input-group mb-2">
-                        <input type="text" class="form-control" id="modificationInput" placeholder="输入修改建议，例如：'增加更多人物冲突'、'加强故事背景'">
-                        <button class="btn btn-primary" onclick="applyModification()">应用修改</button>
+                        <div class="step-actions">
+                            <button class="btn btn-secondary" onclick="prevStep(2)">上一步</button>
+                            <button class="btn btn-warning" onclick="regenerateBackground()">重新生成</button>
+                            <button class="btn btn-primary" onclick="nextStep(2)">确认并继续</button>
                         </div>
-                    <div class="suggestion-tags">
-                        <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="selectSuggestion(this)">增加人物冲突</button>
-                        <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="selectSuggestion(this)">加强故事背景</button>
-                        <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="selectSuggestion(this)">调整情节节奏</button>
-                        <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="selectSuggestion(this)">增加情感描写</button>
-                        <button class="btn btn-sm btn-outline-secondary me-2 mb-2" onclick="selectSuggestion(this)">添加悬疑元素</button>
                     </div>
-                </div>
-                
-                <div class="export-tools">
-                    <button class="btn btn-outline-primary" onclick="exportWord()">导出 Word</button>
-                    <button class="btn btn-outline-primary" onclick="exportText()">导出 Text</button>
-                    <button class="btn btn-outline-primary" onclick="copyContent()">复制内容</button>
+                    
+                    <!-- 步骤3：生成大纲 -->
+                    <div class="step-content" id="step3">
+                        <h5 class="card-title">第三步：生成小说大纲</h5>
+                        <div class="content-area-wrapper">
+                            <textarea class="content-area" id="outlineContent" placeholder="正在生成小说大纲..."></textarea>
+                        </div>
+                        <div class="intervention-panel">
+                            <h6>大纲调整</h6>
+                            <div class="input-group mb-3">
+                                <input type="text" class="form-control" id="outlineModification" placeholder="输入修改建议，例如：'调整情节发展'">
+                                <button class="btn btn-primary" onclick="applyOutlineModification()">应用修改</button>
+                            </div>
+                            <div class="suggestion-tags">
+                                <button class="btn btn-sm btn-outline-secondary" onclick="selectOutlineSuggestion(this)">调整情节发展</button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="selectOutlineSuggestion(this)">增加故事转折</button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="selectOutlineSuggestion(this)">优化结局设计</button>
+                            </div>
+                        </div>
+                        <div class="step-actions">
+                            <button class="btn btn-secondary" onclick="prevStep(3)">上一步</button>
+                            <button class="btn btn-warning" onclick="regenerateOutline()">重新生成</button>
+                            <button class="btn btn-primary" onclick="nextStep(3)">确认并继续</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 步骤4：章节生成 -->
+                    <div class="step-content" id="step4">
+                        <h5 class="card-title">第四步：生成章节内容</h5>
+                        <div class="chapter-selection mb-3">
+                            <label for="chapterSelect" class="form-label">选择要生成的章节</label>
+                            <select class="form-select" id="chapterSelect">
+                                <option value="" disabled selected>请选择章节</option>
+                            </select>
+                        </div>
+                        <div class="content-area-wrapper">
+                            <textarea class="content-area" id="chapterContent" placeholder="请选择要生成的章节..."></textarea>
+                        </div>
+                        <div class="intervention-panel">
+                            <h6>章节调整</h6>
+                            <div class="input-group mb-3">
+                                <input type="text" class="form-control" id="chapterModification" placeholder="输入修改建议，例如：'增加细节描写'">
+                                <button class="btn btn-primary" onclick="applyChapterModification()">应用修改</button>
+                            </div>
+                            <div class="suggestion-tags">
+                                <button class="btn btn-sm btn-outline-secondary" onclick="selectChapterSuggestion(this)">增加细节描写</button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="selectChapterSuggestion(this)">加强情感刻画</button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="selectChapterSuggestion(this)">优化场景描写</button>
+                            </div>
+                        </div>
+                        <div class="step-actions">
+                            <button class="btn btn-secondary" onclick="prevStep(4)">上一步</button>
+                            <button class="btn btn-warning" onclick="regenerateChapter()">重新生成</button>
+                            <button class="btn btn-success" onclick="saveChapter()">保存章节</button>
+                            <button class="btn btn-primary" onclick="nextStep(4)">完成并导出</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 步骤5：内容完善 -->
+                    <div class="step-content" id="step5">
+                        <h5 class="card-title">第五步：导出和完善</h5>
+                        <div class="export-options">
+                            <button class="btn btn-outline-primary" onclick="exportWord()">导出 Word</button>
+                            <button class="btn btn-outline-primary" onclick="exportText()">导出 Text</button>
+                            <button class="btn btn-outline-primary" onclick="copyContent()">复制内容</button>
+                        </div>
+                        <div class="step-actions">
+                            <button class="btn btn-secondary" onclick="prevStep(5)">返回编辑</button>
+                            <button class="btn btn-primary" onclick="startNew()">开始新的创作</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -370,6 +549,10 @@
         let isGeneratingOutline = false;
         let outlineStages = ['整体规划', '详细大纲'];
         let currentStage = 0;
+        let currentStep = 1;
+        let savedChapters = {};
+        let backgroundContent = '';
+        let outlineContent = '';
 
         function saveApiKey(apiKey) {
             localStorage.setItem('moonshotApiKey', apiKey);
@@ -893,6 +1076,358 @@ ${currentContent}
                 }
             }
             loadApiKey();
+        });
+
+        // 步骤控制函数
+        function updateStepIndicator(step) {
+            document.querySelectorAll('.step-item').forEach(item => {
+                const itemStep = parseInt(item.dataset.step);
+                item.classList.remove('active', 'completed');
+                if (itemStep === step) {
+                    item.classList.add('active');
+                } else if (itemStep < step) {
+                    item.classList.add('completed');
+                }
+            });
+        }
+
+        function showStep(step) {
+            document.querySelectorAll('.step-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`step${step}`).classList.add('active');
+            updateStepIndicator(step);
+        }
+
+        async function nextStep(currentStep) {
+            switch(currentStep) {
+                case 1:
+                    const title = document.getElementById('title').value;
+                    const novelType = document.getElementById('novelType').value;
+                    if (!title || !novelType) {
+                        alert('请填写小说标题和类型');
+                        return;
+                    }
+                    // 生成背景
+                    await generateBackground();
+                    break;
+                case 2:
+                    // 保存背景内容
+                    backgroundContent = document.getElementById('backgroundContent').value;
+                    // 生成大纲
+                    await generateOutline();
+                    break;
+                case 3:
+                    // 保存大纲内容
+                    outlineContent = document.getElementById('outlineContent').value;
+                    // 解析大纲生成章节选项
+                    generateChapterOptions();
+                    break;
+                case 4:
+                    // 检查是否所有章节都已生成
+                    if (Object.keys(savedChapters).length === 0) {
+                        if (!confirm('您还没有生成任何章节内容，确定要继续吗？')) {
+                            return;
+                        }
+                    }
+                    break;
+            }
+            
+            showStep(currentStep + 1);
+        }
+
+        function prevStep(currentStep) {
+            showStep(currentStep - 1);
+        }
+
+        async function generateBackground() {
+            const title = document.getElementById('title').value;
+            const novelType = document.getElementById('novelType').value;
+            const apiKey = document.getElementById('apiKey').value;
+            
+            document.getElementById('backgroundContent').value = '正在生成故事背景，请稍候...';
+            
+            try {
+                const response = await callMoonshotAPI(apiKey, {
+                    messages: [
+                        {
+                            role: "system",
+                            content: `你是一个专业的${novelType}小说背景设定师。请创作详细的故事背景和人物设定。`
+                        },
+                        {
+                            role: "user",
+                            content: `请为题为《${title}》的${novelType}小说创作详细的背景设定，包括：
+1. 世界观/时代背景
+2. 主要人物介绍（性格特点、外貌特征、身份背景）
+3. 重要人物关系网络
+4. 核心矛盾/冲突设定
+请确保内容详实，为后续故事发展做好铺垫。`
+                        }
+                    ]
+                });
+                
+                document.getElementById('backgroundContent').value = response.choices[0].message.content;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('backgroundContent').value = '生成失败，请稍后重试';
+            }
+        }
+
+        async function generateOutline() {
+            const title = document.getElementById('title').value;
+            const novelType = document.getElementById('novelType').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const background = document.getElementById('backgroundContent').value;
+            
+            document.getElementById('outlineContent').value = '正在生成故事大纲，请稍候...';
+            
+            try {
+                const response = await callMoonshotAPI(apiKey, {
+                    messages: [
+                        {
+                            role: "system",
+                            content: `你是一个专业的${novelType}小说大纲策划师。请基于已有的背景设定，创作详细的故事大纲。`
+                        },
+                        {
+                            role: "user",
+                            content: `基于以下背景设定，为《${title}》创作详细的故事大纲：
+
+${background}
+
+要求：
+1. 规划完整的故事架构（序章-正文-结局）
+2. 设计合理的情节发展和转折点
+3. 每个章节都要有明确的剧情推进
+4. 注意故事节奏的控制
+5. 确保与背景设定的一致性
+请按章节列出大纲，每个章节都要有简要的内容概述。`
+                        }
+                    ]
+                });
+                
+                document.getElementById('outlineContent').value = response.choices[0].message.content;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('outlineContent').value = '生成失败，请稍后重试';
+            }
+        }
+
+        function generateChapterOptions() {
+            const outline = document.getElementById('outlineContent').value;
+            const chapters = outline.match(/第[一二三四五六七八九十]+章[：:].+/g) || [];
+            
+            const chapterSelect = document.getElementById('chapterSelect');
+            chapterSelect.innerHTML = '<option value="" disabled selected>请选择章节</option>';
+            
+            chapters.forEach((chapter, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = chapter;
+                chapterSelect.appendChild(option);
+            });
+        }
+
+        async function generateChapter() {
+            const title = document.getElementById('title').value;
+            const novelType = document.getElementById('novelType').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const chapterSelect = document.getElementById('chapterSelect');
+            const selectedChapter = chapterSelect.options[chapterSelect.selectedIndex].text;
+            
+            if (!selectedChapter) {
+                alert('请选择要生成的章节');
+                return;
+            }
+            
+            document.getElementById('chapterContent').value = '正在生成章节内容，请稍候...';
+            
+            try {
+                const response = await callMoonshotAPI(apiKey, {
+                    messages: [
+                        {
+                            role: "system",
+                            content: `你是一个专业的${novelType}小说写作助手。请基于背景设定和大纲，创作精彩的章节内容。`
+                        },
+                        {
+                            role: "user",
+                            content: `请基于以下信息，创作《${title}》的${selectedChapter}：
+
+背景设定：
+${backgroundContent}
+
+故事大纲：
+${outlineContent}
+
+要求：
+1. 详细描写场景和人物
+2. 字数控制在4000-6000字之间
+3. 符合${novelType}小说的特点
+4. 注重情节发展的合理性
+5. 保持人物性格的一致性
+6. 适当运用环境描写和心理描写
+7. 与前文保持连贯
+8. 合理安排情节节奏`
+                        }
+                    ]
+                });
+                
+                document.getElementById('chapterContent').value = response.choices[0].message.content;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('chapterContent').value = '生成失败，请稍后重试';
+            }
+        }
+
+        function saveChapter() {
+            const chapterSelect = document.getElementById('chapterSelect');
+            const selectedChapter = chapterSelect.options[chapterSelect.selectedIndex].text;
+            const content = document.getElementById('chapterContent').value;
+            
+            savedChapters[selectedChapter] = content;
+            alert('章节内容已保存！');
+        }
+
+        // 人工干涉函数
+        async function applyModification(stage, content, modification) {
+            const title = document.getElementById('title').value;
+            const novelType = document.getElementById('novelType').value;
+            const apiKey = document.getElementById('apiKey').value;
+            
+            try {
+                const response = await callMoonshotAPI(apiKey, {
+                    messages: [
+                        {
+                            role: "system",
+                            content: `你是一个专业的${novelType}小说${stage}优化专家。请根据用户的建议修改内容。`
+                        },
+                        {
+                            role: "user",
+                            content: `请根据以下建议修改《${title}》的${stage}：
+
+修改建议：${modification}
+
+原内容：
+${content}
+
+要求：
+1. 保持原有内容的基本框架
+2. 根据修改建议进行优化
+3. 确保修改后的内容更加吸引人
+4. 保持文风的一致性`
+                        }
+                    ]
+                });
+                
+                return response.choices[0].message.content;
+            } catch (error) {
+                console.error('Error:', error);
+                throw new Error('修改失败，请稍后重试');
+            }
+        }
+
+        async function applyBackgroundModification() {
+            const modification = document.getElementById('backgroundModification').value;
+            if (!modification) {
+                alert('请输入修改建议');
+                return;
+            }
+            
+            const content = document.getElementById('backgroundContent').value;
+            try {
+                const result = await applyModification('背景设定', content, modification);
+                document.getElementById('backgroundContent').value = result;
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        async function applyOutlineModification() {
+            const modification = document.getElementById('outlineModification').value;
+            if (!modification) {
+                alert('请输入修改建议');
+                return;
+            }
+            
+            const content = document.getElementById('outlineContent').value;
+            try {
+                const result = await applyModification('故事大纲', content, modification);
+                document.getElementById('outlineContent').value = result;
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        async function applyChapterModification() {
+            const modification = document.getElementById('chapterModification').value;
+            if (!modification) {
+                alert('请输入修改建议');
+                return;
+            }
+            
+            const content = document.getElementById('chapterContent').value;
+            try {
+                const result = await applyModification('章节内容', content, modification);
+                document.getElementById('chapterContent').value = result;
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        // 重新生成函数
+        async function regenerateBackground() {
+            if (confirm('确定要重新生成背景吗？当前内容将被覆盖。')) {
+                await generateBackground();
+            }
+        }
+
+        async function regenerateOutline() {
+            if (confirm('确定要重新生成大纲吗？当前内容将被覆盖。')) {
+                await generateOutline();
+            }
+        }
+
+        async function regenerateChapter() {
+            if (confirm('确定要重新生成当前章节吗？当前内容将被覆盖。')) {
+                await generateChapter();
+            }
+        }
+
+        // 建议标签选择函数
+        function selectBackgroundSuggestion(button) {
+            document.getElementById('backgroundModification').value = button.textContent;
+        }
+
+        function selectOutlineSuggestion(button) {
+            document.getElementById('outlineModification').value = button.textContent;
+        }
+
+        function selectChapterSuggestion(button) {
+            document.getElementById('chapterModification').value = button.textContent;
+        }
+
+        // 开始新创作
+        function startNew() {
+            if (confirm('确定要开始新的创作吗？当前所有内容将被清空。')) {
+                document.getElementById('title').value = '';
+                document.getElementById('novelType').value = '';
+                document.getElementById('backgroundContent').value = '';
+                document.getElementById('outlineContent').value = '';
+                document.getElementById('chapterContent').value = '';
+                savedChapters = {};
+                backgroundContent = '';
+                outlineContent = '';
+                showStep(1);
+            }
+        }
+
+        // 绑定章节选择事件
+        document.getElementById('chapterSelect').addEventListener('change', function() {
+            const selectedChapter = this.options[this.selectedIndex].text;
+            if (savedChapters[selectedChapter]) {
+                document.getElementById('chapterContent').value = savedChapters[selectedChapter];
+            } else {
+                document.getElementById('chapterContent').value = '请点击"生成章节"按钮生成内容';
+            }
         });
     </script>
 </body>
