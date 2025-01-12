@@ -1134,12 +1134,18 @@ ${currentContent}
             });
         }
 
-        function showStep(step) {
+        async function showStep(step) {
             document.querySelectorAll('.step-content').forEach(content => {
-                content.classList.remove('active');
+                if (content.id === `step${step}`) {
+                    content.style.display = 'block';
+                    content.style.opacity = '0';
+                    setTimeout(() => {
+                        content.style.opacity = '1';
+                    }, 10);
+                } else {
+                    content.style.display = 'none';
+                }
             });
-            document.getElementById(`step${step}`).classList.add('active');
-            updateStepIndicator(step);
         }
 
         async function nextStep() {
@@ -1172,9 +1178,23 @@ ${currentContent}
                     await generateBackground();
                 }
                 
+                // 更新步骤
                 currentStep++;
-                updateStepIndicator(currentStep);
-                showStep(currentStep);
+                
+                // 更新步骤指示器
+                document.querySelectorAll('.step-item').forEach((item, index) => {
+                    const itemStep = parseInt(item.dataset.step);
+                    item.classList.remove('active', 'completed');
+                    if (itemStep === currentStep) {
+                        item.classList.add('active');
+                    } else if (itemStep < currentStep) {
+                        item.classList.add('completed');
+                    }
+                });
+                
+                // 显示新步骤内容
+                await showStep(currentStep);
+                
             } catch (error) {
                 console.error('Error:', error);
                 alert('发生错误，请重试：' + error.message);
@@ -1532,27 +1552,17 @@ ${content}
         });
 
         async function showStep(step) {
-            const steps = document.querySelectorAll('.step');
-            steps.forEach((s, index) => {
-                if (index + 1 === step) {
-                    s.style.display = 'block';
-                    s.style.opacity = '0';
+            document.querySelectorAll('.step-content').forEach(content => {
+                if (content.id === `step${step}`) {
+                    content.style.display = 'block';
+                    content.style.opacity = '0';
                     setTimeout(() => {
-                        s.style.opacity = '1';
+                        content.style.opacity = '1';
                     }, 10);
                 } else {
-                    s.style.display = 'none';
+                    content.style.display = 'none';
                 }
             });
-            
-            // 预加载下一步所需的资源
-            if (step === 1) {
-                // 预加载背景生成相关资源
-                document.getElementById('backgroundPrompt').value = getBackgroundPrompt();
-            } else if (step === 2) {
-                // 预加载大纲生成相关资源
-                document.getElementById('outlinePrompt').value = getOutlinePrompt();
-            }
         }
 
         function updateStepIndicator() {
