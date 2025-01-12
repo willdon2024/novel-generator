@@ -612,6 +612,11 @@
                             <button class="btn btn-success" onclick="saveContent()">保存内容</button>
                             <button class="btn btn-warning" onclick="regenerateContent()">重新生成</button>
                         </div>
+                        <div class="export-tools mt-3">
+                            <button class="btn btn-outline-primary" onclick="exportWord()">导出Word</button>
+                            <button class="btn btn-outline-primary" onclick="exportText()">导出Text</button>
+                            <button class="btn btn-outline-secondary" onclick="copyContent()">复制内容</button>
+                        </div>
                         <div class="step-actions mt-3">
                             <button class="btn btn-secondary" onclick="prevStep(4)">上一步</button>
                             <button class="btn btn-primary" onclick="nextStep(4)">下一步</button>
@@ -953,12 +958,11 @@
         });
 
         async function exportWord() {
-            const content = document.getElementById('contentArea').value;
-            if (!content) {
+            if (Object.keys(savedChapters).length === 0) {
                 alert('没有可导出的内容！');
                 return;
             }
-            
+
             const doc = new docx.Document({
                 sections: [{
                     properties: {},
@@ -966,12 +970,39 @@
                         new docx.Paragraph({
                             text: document.getElementById('title').value || '小说标题',
                             heading: docx.HeadingLevel.HEADING_1
-                        }),
-                        new docx.Paragraph({
-                            text: content
                         })
                     ]
                 }]
+            });
+
+            // 按章节顺序添加内容
+            chapters.forEach(chapter => {
+                // 添加章节标题
+                doc.addSection({
+                    children: [
+                        new docx.Paragraph({
+                            text: chapter.title,
+                            heading: docx.HeadingLevel.HEADING_2
+                        })
+                    ]
+                });
+
+                // 添加小节内容
+                chapter.sections.forEach(section => {
+                    if (savedChapters[section.id]) {
+                        doc.addSection({
+                            children: [
+                                new docx.Paragraph({
+                                    text: section.title,
+                                    heading: docx.HeadingLevel.HEADING_3
+                                }),
+                                new docx.Paragraph({
+                                    text: savedChapters[section.id]
+                                })
+                            ]
+                        });
+                    }
+                });
             });
 
             const blob = await docx.Packer.toBlob(doc);
@@ -979,11 +1010,23 @@
         }
 
         function exportText() {
-            const content = document.getElementById('contentArea').value;
-            if (!content) {
+            if (Object.keys(savedChapters).length === 0) {
                 alert('没有可导出的内容！');
                 return;
             }
+
+            let content = document.getElementById('title').value + '\n\n';
+
+            // 按章节顺序添加内容
+            chapters.forEach(chapter => {
+                content += chapter.title + '\n\n';
+                chapter.sections.forEach(section => {
+                    if (savedChapters[section.id]) {
+                        content += section.title + '\n\n';
+                        content += savedChapters[section.id] + '\n\n';
+                    }
+                });
+            });
 
             const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
             saveAs(blob, `${document.getElementById('title').value || '小说'}.txt`);
@@ -1685,6 +1728,11 @@ ${content}
         let selectedItem = null;
 
         function addChapter() {
+            if (chapters.length >= 30) {
+                alert('已达到最大章节数限制（30章）！');
+                return;
+            }
+            
             const chapterName = prompt('请输入章的标题：');
             if (chapterName) {
                 const chapter = {
@@ -1704,17 +1752,23 @@ ${content}
                 return;
             }
 
+            const chapter = chapters.find(c => c.id === selectedItem.id);
+            if (!chapter) return;
+
+            if (chapter.sections.length >= 5) {
+                alert('每章最多只能添加5个小节！');
+                return;
+            }
+
             const sectionName = prompt('请输入节的标题：');
             if (sectionName) {
-                const chapter = chapters.find(c => c.id === selectedItem.id);
-                if (chapter) {
-                    chapter.sections.push({
-                        id: Date.now(),
-                        type: 'section',
-                        title: `第${chapter.sections.length + 1}节 ${sectionName}`
-                    });
-                    updateChapterTree();
-                }
+                chapter.sections.push({
+                    id: Date.now(),
+                    type: 'section',
+                    title: `第${chapter.sections.length + 1}节 ${sectionName}`,
+                    content: ''
+                });
+                updateChapterTree();
             }
         }
 
@@ -1776,7 +1830,19 @@ ${content}
             const chapter = chapters.find(c => c.sections.some(s => s.id === selectedItem.id));
             if (!chapter) return;
 
-            showLoading();
+            const progressBar = document.querySelector('.generation-progress');
+            progressBar.style.display = 'block';
+            const progressBarInner = progressBar.querySelector('.progress-bar');
+            let progress = 0;
+
+            // 启动进度条动画
+            const progressInterval = setInterval(() => {
+                progress += 1;
+                if (progress <= 90) {
+                    progressBarInner.style.width = `${progress}%`;
+                }
+            }, 500);
+
             try {
                 const response = await fetch('/generate_section', {
                     method: 'POST',
@@ -1798,13 +1864,19 @@ ${content}
                 const data = await response.json();
                 if (data.status === 'success') {
                     document.getElementById('chapterContent').value = data.content;
+                    progressBarInner.style.width = '100%';
                 } else {
                     alert('生成失败：' + data.message);
                 }
             } catch (error) {
                 alert('生成失败：' + error.message);
+            } finally {
+                clearInterval(progressInterval);
+                setTimeout(() => {
+                    progressBar.style.display = 'none';
+                    progressBarInner.style.width = '0%';
+                }, 1000);
             }
-            hideLoading();
         }
 
         function showLoading() {
