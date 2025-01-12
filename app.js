@@ -252,6 +252,9 @@ function nextStep(currentStepNumber) {
             alert('请填写小说标题和选择类型');
             return;
         }
+        
+        // 显示加载状态
+        showLoading('正在生成故事背景...');
     }
     
     // 更新步骤指示器
@@ -271,6 +274,18 @@ function nextStep(currentStepNumber) {
         nextContent.classList.add('show', 'active');
         progressManager.nextStep();
         console.log('内容已切换到步骤:', currentStepNumber + 1);
+        
+        // 根据步骤显示不同的加载提示
+        if (currentStepNumber === 1) {
+            // 自动开始生成故事背景
+            setTimeout(() => {
+                const backgroundText = document.getElementById('backgroundText');
+                if (backgroundText) {
+                    backgroundText.value = '正在生成故事背景和人物关系，请稍候...';
+                    generateBackground();
+                }
+            }, 100);
+        }
     }
 }
 
@@ -295,4 +310,53 @@ function prevStep(currentStepNumber) {
         progressManager.prevStep();
         console.log('内容已切换到步骤:', currentStepNumber - 1);
     }
+}
+
+// 显示加载状态
+function showLoading(message) {
+    const progressDiv = document.querySelector('.generation-progress');
+    const loadingText = progressDiv.querySelector('.loading-text');
+    const progressBar = progressDiv.querySelector('.progress-bar');
+    
+    if (progressDiv && loadingText && progressBar) {
+        progressDiv.style.display = 'block';
+        loadingText.textContent = message;
+        progressBar.style.width = '0%';
+        
+        // 模拟进度
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += 5;
+            if (progress > 90) {
+                clearInterval(interval);
+            }
+            progressBar.style.width = `${progress}%`;
+        }, 200);
+    }
+}
+
+// 隐藏加载状态
+function hideLoading() {
+    const progressDiv = document.querySelector('.generation-progress');
+    if (progressDiv) {
+        progressDiv.style.display = 'none';
+    }
+}
+
+// 生成故事背景
+function generateBackground() {
+    const title = document.getElementById('novelTitle').value;
+    const genre = document.getElementById('novelGenre').value;
+    
+    // 这里添加实际的生成逻辑
+    console.log('生成故事背景:', { title, genre });
+    
+    // 模拟生成过程
+    setTimeout(() => {
+        const backgroundText = document.getElementById('backgroundText');
+        if (backgroundText) {
+            backgroundText.value = `《${title}》是一部${genre}小说...\n\n正在构思故事背景和人物关系...`;
+        }
+        hideLoading();
+    }, 3000);
 } 
