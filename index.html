@@ -750,42 +750,86 @@
             }
         }
 
-        document.getElementById('confirmApiKey').addEventListener('click', function() {
+        document.getElementById('confirmApiKey').addEventListener('click', async function() {
             const apiKey = document.getElementById('apiKey').value;
-            if (apiKey) {
-                saveApiKey(apiKey);
-                document.getElementById('apiKey').disabled = true;
-                document.getElementById('confirmApiKey').disabled = true;
-                alert('API Key 已保存！');
-            } else {
+            if (!apiKey) {
                 alert('请输入 API Key');
+                return;
+            }
+
+            try {
+                this.disabled = true;
+                this.textContent = '验证中...';
+                
+                const testMessages = [{
+                    role: "user",
+                    content: "你好"
+                }];
+                
+                console.log('开始验证 API Key...');
+                await callMoonshotAPI(testMessages, apiKey);
+                
+                console.log('API Key 验证成功');
+                document.getElementById('apiKey').disabled = true;
+                localStorage.setItem('apiKey', apiKey);
+                alert('API Key 验证成功！');
+                
+            } catch (error) {
+                console.error('API Key 验证失败:', error);
+                alert(error.message);
+                this.disabled = false;
+            } finally {
+                this.textContent = '确认';
             }
         });
 
         async function callMoonshotAPI(messages, apiKey) {
+            if (!apiKey) {
+                throw new Error('API Key 不能为空');
+            }
+
             try {
+                const requestBody = {
+                    model: "moonshot-v1-8k",
+                    messages: messages,
+                    temperature: 0.7,
+                    max_tokens: 3000
+                };
+                
+                console.log('API Request Body:', JSON.stringify(requestBody, null, 2));
+                
                 const response = await fetch('https://api.moonshot.cn/v1/chat/completions', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${apiKey}`
                     },
-                    body: JSON.stringify({
-                        model: "moonshot-v1-8k",
-                        messages: messages,
-                        temperature: 0.7,
-                        max_tokens: 3000
-                    })
+                    body: JSON.stringify(requestBody)
                 });
 
+                console.log('Response Status:', response.status);
+
                 if (!response.ok) {
-                    throw new Error(`API请求失败: ${response.status}`);
+                    const errorText = await response.text();
+                    console.error('API Error Response:', errorText);
+                    
+                    if (response.status === 401) {
+                        throw new Error('API Key 无效或未授权，请检查您的 API Key');
+                    } else {
+                        throw new Error(`API 请求失败: ${response.status}`);
+                    }
                 }
 
                 const data = await response.json();
+                console.log('API Response Data:', data);
+
+                if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+                    throw new Error('API 返回数据格式错误');
+                }
+                
                 return data.choices[0].message.content;
             } catch (error) {
-                console.error('API调用错误:', error);
+                console.error('API 调用错误:', error);
                 throw error;
             }
         }
@@ -1319,68 +1363,41 @@ ${currentContent}
         }
 
         async function generateBackground() {
-            const title = document.getElementById('title').value.trim();
-            const novelType = document.getElementById('novelType').value;
-            const apiKey = document.getElementById('apiKey').value;
+            const title = document.getElementById('title').value;
+            const genre = document.getElementById('novelType').value;
             
+            if (!title || !genre) {
+                alert('请先填写小说标题和类型！');
+                return;
+            }
+
+            const apiKey = localStorage.getItem('apiKey');
             if (!apiKey) {
-                throw new Error('请先输入并确认 API Key');
+                alert('请先设置 API Key！');
+                return;
             }
-            
-            if (!title || !novelType) {
-                throw new Error('请先填写小说标题和类型');
-            }
-            
-            const backgroundContent = document.getElementById('backgroundContent');
-            backgroundContent.value = '正在生成故事背景，请稍候...';
-            
+
+            showLoading();
             try {
-                const response = await callMoonshotAPI(apiKey, {
-                    messages: [
-                        {
-                            role: "system",
-                            content: `你是一个专业的${novelType}小说背景设定师。请创作详细的故事背景和人物设定。`
-                        },
-                        {
-                            role: "user",
-                            content: `请为题为《${title}》的${novelType}小说创作详细的背景设定，包括：
+                const messages = [
+                    {
+                        role: "system",
+                        content: `你是一个专业的${genre}小说写手，擅长创作引人入胜的故事背景。`
+                    },
+                    {
+                        role: "user",
+                        content: `请为${genre}小说《${title}》创作一个详细的背景设定。要求：\n1. 世界观要完整且独特\n2. 背景信息要丰富\n3. 要包含重要地点描写\n4. 要包含重要人物设定\n5. 要为后续情节发展埋下伏笔`
+                    }
+                ];
 
-1. 详细的故事背景设定（至少500字）
-   - 世界观/时代背景
-   - 社会环境/文化背景
-   - 特殊设定/规则
-
-2. 主要人物介绍（每个主要人物至少200字）
-   - 性格特点
-   - 外貌特征
-   - 身份背景
-   - 人物关系网络
-
-3. 核心矛盾/冲突设定
-   - 主要矛盾
-   - 次要矛盾
-   - 内外冲突
-
-要求：
-1. 内容详实具体
-2. 符合${novelType}类型特点
-3. 为后续故事发展做好铺垫
-4. 保持设定的合理性和连贯性
-5. 突出故事的独特性`
-                        }
-                    ],
-                    temperature: 0.8,
-                    max_tokens: 2000
-                });
+                const content = await callMoonshotAPI(messages, apiKey);
+                document.getElementById('contentArea').value = content;
+                localStorage.setItem('background', content);
                 
-                if (response && response.choices && response.choices[0] && response.choices[0].message) {
-                    backgroundContent.value = response.choices[0].message.content;
-                } else {
-                    throw new Error('API 返回数据格式错误');
-                }
             } catch (error) {
-                console.error('生成背景时出错:', error);
-                throw new Error('生成背景失败：' + error.message);
+                alert('生成背景失败: ' + error.message);
+            } finally {
+                hideLoading();
             }
         }
 
