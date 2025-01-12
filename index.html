@@ -523,6 +523,14 @@
                         <h5 class="card-title">第三步：生成小说大纲</h5>
                         <div class="content-area-wrapper">
                             <textarea class="content-area" id="outlineContent" placeholder="正在生成小说大纲..."></textarea>
+                            <!-- 添加进度条和加载状态 -->
+                            <div class="generation-progress" style="display: none;">
+                                <div class="progress" style="height: 4px; margin: 20px 0;">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                                </div>
+                                <p class="text-center text-muted loading-text">正在生成大纲内容，请耐心等待...</p>
+                                <p class="text-center text-muted estimated-time">预计需要 1-2 分钟</p>
+                            </div>
                         </div>
                         <div class="intervention-panel">
                             <h6>大纲调整</h6>
@@ -1309,6 +1317,22 @@ ${currentContent}
             const apiKey = document.getElementById('apiKey').value;
             const background = document.getElementById('backgroundContent').value;
             
+            // 显示进度条和加载状态
+            const progressDiv = document.querySelector('.generation-progress');
+            const progressBar = progressDiv.querySelector('.progress-bar');
+            progressDiv.style.display = 'block';
+            
+            // 启动进度条动画
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 1;
+                if (progress > 90) {
+                    clearInterval(progressInterval);
+                } else {
+                    progressBar.style.width = `${progress}%`;
+                }
+            }, 1000);
+            
             document.getElementById('outlineContent').value = '正在生成故事大纲，请稍候...';
             
             try {
@@ -1320,43 +1344,27 @@ ${currentContent}
                         },
                         {
                             role: "user",
-                            content: `基于以下背景设定，为《${title}》创作详细的故事大纲：
-
-${background}
-
-要求：
-1. 故事情节要符合${novelType}的特点和规律
-2. 人物性格鲜明，故事情节吸引人
-3. 按照序章+正文（12-15章）的结构来写
-4. 每个情节转折要符合逻辑，有因果关系
-5. 结尾要有意想不到的转折或深刻的寓意
-6. 列出3个重要的故事转折点，并说明这些转折点分别发生在第几章
-7. 故事结构按照"序章-发展-高潮-结局"四个阶段展开，每个阶段3-4章
-
-请按以下格式输出：
-一、整体架构
-[列出故事的整体框架和主要脉络]
-
-二、分章节大纲
-第一章：[章节标题]
-[详细内容概述，200字左右]
-
-[依此类推...]
-
-三、重要转折点
-1. [第X章] - [转折点描述]
-2. [第X章] - [转折点描述]
-3. [第X章] - [转折点描述]`
+                            content: `基于以下背景设定，为《${title}》创作详细的故事大纲：\n\n${background}\n\n要求：\n1. 故事情节要符合${novelType}的特点和规律\n2. 人物性格鲜明，故事情节吸引人\n3. 按照序章+正文（12-15章）的结构来写\n4. 每个情节转折要符合逻辑，有因果关系\n5. 结尾要有意想不到的转折或深刻的寓意\n6. 列出3个重要的故事转折点，并说明这些转折点分别发生在第几章\n7. 故事结构按照"序章-发展-高潮-结局"四个阶段展开，每个阶段3-4章`
                         }
                     ],
                     temperature: 0.8,
                     max_tokens: 3000
                 });
                 
+                // 生成完成，设置进度条为100%
+                progressBar.style.width = '100%';
+                setTimeout(() => {
+                    progressDiv.style.display = 'none';
+                    progressBar.style.width = '0%';
+                }, 1000);
+                
                 document.getElementById('outlineContent').value = response.choices[0].message.content;
             } catch (error) {
                 console.error('Error:', error);
+                progressDiv.style.display = 'none';
                 throw new Error('生成大纲失败：' + error.message);
+            } finally {
+                clearInterval(progressInterval);
             }
         }
 
