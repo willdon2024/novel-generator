@@ -802,7 +802,7 @@
             }
         });
 
-        // 1. 统一的 API 调用函数
+        // 统一的 API 调用
         async function callMoonshotAPI(messages, apiKey) {
             if (!apiKey) {
                 throw new Error('请先设置 API Key');
@@ -1385,7 +1385,7 @@ ${currentContent}
                 ];
 
                 const content = await callMoonshotAPI(messages, apiKey);
-                document.getElementById('contentArea').value = content;
+                document.getElementById('backgroundContent').value = content;
                 localStorage.setItem('background', content);
                 
                 // 完成进度
@@ -2118,14 +2118,16 @@ ${outline}
         }
 
         // 修复进度条显示
-        function showProgress(container) {
+        function showProgress(container, message = '正在处理...') {
             const progressDiv = container.querySelector('.generation-progress');
+            if (!progressDiv) return null;
+            
             const progressBar = progressDiv.querySelector('.progress-bar');
             const loadingText = progressDiv.querySelector('.loading-text');
             
             progressDiv.style.display = 'block';
             progressBar.style.width = '0%';
-            loadingText.textContent = '正在生成内容，请稍候...';
+            loadingText.textContent = message;
             
             let progress = 0;
             const progressInterval = setInterval(() => {
@@ -2170,8 +2172,12 @@ ${outline}
                 return;
             }
 
-            const container = document.querySelector('.content-area-wrapper');
-            const progress = showProgress(container);
+            const container = document.querySelector('#step4 .content-area-wrapper');
+            const progress = showProgress(container, '正在生成内容...');
+            if (!progress) {
+                alert('页面元素加载失败，请刷新重试！');
+                return;
+            }
 
             try {
                 const title = document.getElementById('title').value;
@@ -2185,13 +2191,16 @@ ${outline}
                     },
                     {
                         role: "user",
-                        content: `请为${genre}小说《${title}》的${chapter.title}生成内容。要求：\n1. 字数4000-6000字
+                        content: `请为${genre}小说《${title}》的${chapter.title}生成内容。要求：
+1. 字数4000-6000字
 2. 场景描写细腻
 3. 情节连贯
 4. 人物性格鲜明
 5. 故事节奏合理
 6. 增加更多的冲突和矛盾
-7. 适当埋设伏笔`
+7. 适当埋设伏笔
+8. 注重细节描写
+9. 对话要生动自然`
                     }
                 ];
 
@@ -2284,6 +2293,268 @@ ${outline}
             const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
             saveAs(blob, `${document.getElementById('title').value || '小说'}.txt`);
         }
+
+        // 1. 统一的状态管理
+        const AppState = {
+            currentStep: 1,
+            chapters: [],
+            savedChapters: {},
+            selectedItem: null,
+            background: '',
+            outline: '',
+            
+            save() {
+                localStorage.setItem('chapters', JSON.stringify(this.chapters));
+                localStorage.setItem('savedChapters', JSON.stringify(this.savedChapters));
+                localStorage.setItem('background', this.background);
+                localStorage.setItem('outline', this.outline);
+            },
+            
+            load() {
+                const chaptersData = localStorage.getItem('chapters');
+                const savedChaptersData = localStorage.getItem('savedChapters');
+                const background = localStorage.getItem('background');
+                const outline = localStorage.getItem('outline');
+                
+                if (chaptersData) this.chapters = JSON.parse(chaptersData);
+                if (savedChaptersData) this.savedChapters = JSON.parse(savedChaptersData);
+                if (background) this.background = background;
+                if (outline) this.outline = outline;
+                
+                this.updateUI();
+            },
+            
+            clear() {
+                this.chapters = [];
+                this.savedChapters = {};
+                this.selectedItem = null;
+                this.background = '';
+                this.outline = '';
+                this.save();
+            },
+            
+            updateUI() {
+                updateChapterTree();
+                if (this.background) {
+                    document.getElementById('backgroundContent').value = this.background;
+                }
+                if (this.outline) {
+                    document.getElementById('outlineContent').value = this.outline;
+                }
+            }
+        };
+
+        // 2. 统一的进度条管理
+        const ProgressManager = {
+            show(container, message = '正在处理...') {
+                const progressDiv = container.querySelector('.generation-progress');
+                if (!progressDiv) return null;
+                
+                const progressBar = progressDiv.querySelector('.progress-bar');
+                const loadingText = progressDiv.querySelector('.loading-text');
+                
+                progressDiv.style.display = 'block';
+                progressBar.style.width = '0%';
+                loadingText.textContent = message;
+                
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += 2;
+                    if (progress <= 90) {
+                        progressBar.style.width = `${progress}%`;
+                    }
+                }, 300);
+                
+                return {
+                    interval: progressInterval,
+                    complete: () => {
+                        progressBar.style.width = '100%';
+                        loadingText.textContent = '生成完成！';
+                        clearInterval(progressInterval);
+                        setTimeout(() => {
+                            progressDiv.style.display = 'none';
+                            progressBar.style.width = '0%';
+                        }, 1000);
+                    },
+                    error: (message) => {
+                        loadingText.textContent = message || '生成失败，请重试';
+                        clearInterval(progressInterval);
+                        setTimeout(() => {
+                            progressDiv.style.display = 'none';
+                            progressBar.style.width = '0%';
+                        }, 1000);
+                    }
+                };
+            }
+        };
+
+        // 3. 统一的 API 调用
+        async function callMoonshotAPI(messages, apiKey) {
+            if (!apiKey) {
+                throw new Error('请先设置 API Key');
+            }
+
+            try {
+                const requestBody = {
+                    model: "moonshot-v1-8k",
+                    messages: messages,
+                    temperature: 0.7,
+                    max_tokens: 3000
+                };
+
+                console.log('API Request:', JSON.stringify(requestBody, null, 2));
+
+                const response = await fetch('https://api.moonshot.cn/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        throw new Error('API Key 无效或未授权');
+                    } else if (response.status === 429) {
+                        throw new Error('请求过于频繁，请稍后再试');
+                    } else {
+                        throw new Error(`API 请求失败 (${response.status})`);
+                    }
+                }
+
+                const data = await response.json();
+                console.log('API Response:', data);
+
+                if (!data.choices?.[0]?.message?.content) {
+                    throw new Error('API 返回数据格式错误');
+                }
+
+                return data.choices[0].message.content;
+            } catch (error) {
+                console.error('API Error:', error);
+                throw error;
+            }
+        }
+
+        // 4. 背景生成功能
+        async function generateBackground() {
+            const title = document.getElementById('title').value.trim();
+            const genre = document.getElementById('novelType').value;
+            
+            if (!title || !genre) {
+                alert('请先填写小说标题和类型！');
+                return;
+            }
+
+            const apiKey = localStorage.getItem('moonshotApiKey');
+            if (!apiKey) {
+                alert('请先设置 API Key！');
+                return;
+            }
+
+            const container = document.querySelector('#step2 .content-area-wrapper');
+            const progress = ProgressManager.show(container, '正在生成背景信息...');
+            if (!progress) {
+                alert('页面元素加载失败，请刷新重试！');
+                return;
+            }
+
+            try {
+                const messages = [
+                    {
+                        role: "system",
+                        content: `你是一个专业的${genre}小说写手，擅长创作引人入胜的故事背景。`
+                    },
+                    {
+                        role: "user",
+                        content: `请为${genre}小说《${title}》创作一个详细的背景设定。要求：
+1. 世界观要完整且独特
+2. 背景信息要丰富
+3. 要包含重要地点描写
+4. 要包含重要人物设定
+5. 要为后续情节发展埋下伏笔
+6. 要符合${genre}的特点
+7. 要有独特的亮点`
+                    }
+                ];
+
+                const content = await callMoonshotAPI(messages, apiKey);
+                document.getElementById('backgroundContent').value = content;
+                localStorage.setItem('background', content);
+                
+                progress.complete();
+            } catch (error) {
+                progress.error(error.message);
+                alert('生成背景失败: ' + error.message);
+            }
+        }
+
+        // 5. 章节生成功能
+        async function generateContent() {
+            if (!AppState.selectedItem || AppState.selectedItem.type !== 'section') {
+                alert('请先选择一个小节！');
+                return;
+            }
+
+            const apiKey = localStorage.getItem('moonshotApiKey');
+            if (!apiKey) {
+                alert('请先设置 API Key！');
+                return;
+            }
+
+            const container = document.querySelector('#step4 .content-area-wrapper');
+            const progress = ProgressManager.show(container, '正在生成内容...');
+            if (!progress) {
+                alert('页面元素加载失败，请刷新重试！');
+                return;
+            }
+
+            try {
+                const title = document.getElementById('title').value;
+                const genre = document.getElementById('novelType').value;
+                const chapter = AppState.chapters.find(c => c.sections.some(s => s.id === AppState.selectedItem.id));
+
+                const messages = [
+                    {
+                        role: "system",
+                        content: `你是一个专业的${genre}小说写手，专注于创作精彩的章节内容。`
+                    },
+                    {
+                        role: "user",
+                        content: `请为${genre}小说《${title}》的${chapter.title}生成内容。要求：
+1. 字数4000-6000字
+2. 场景描写细腻
+3. 情节连贯
+4. 人物性格鲜明
+5. 故事节奏合理
+6. 增加更多的冲突和矛盾
+7. 适当埋设伏笔
+8. 注重细节描写
+9. 对话要生动自然`
+                    }
+                ];
+
+                const content = await callMoonshotAPI(messages, apiKey);
+                document.getElementById('chapterContent').value = content;
+                
+                // 自动保存
+                AppState.savedChapters[AppState.selectedItem.id] = content;
+                AppState.save();
+                
+                progress.complete();
+                updateChapterTree();
+            } catch (error) {
+                progress.error(error.message);
+                alert('生成失败：' + error.message);
+            }
+        }
+
+        // 6. 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            AppState.load();
+            loadApiKey();
+        });
     </script>
 </body>
 </html> 
