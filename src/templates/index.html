@@ -931,6 +931,79 @@
             });
         }
 
+        // 页面加载时检查授权状态
+        window.addEventListener('load', function() {
+            console.log('页面加载完成');
+            checkAuthStatus();
+            
+            // 绑定验证按钮点击事件
+            const verifyButton = document.getElementById('verifyAuth');
+            if (verifyButton) {
+                verifyButton.addEventListener('click', verifyAuthCode);
+                console.log('验证按钮事件已绑定');
+            }
+        });
+
+        // 检查授权状态
+        function checkAuthStatus() {
+            const savedAuthCode = localStorage.getItem('authCode');
+            const savedActivation = localStorage.getItem('authActivated');
+            console.log('检查授权状态:', { savedAuthCode, savedActivation });
+
+            if (savedAuthCode && validAuthCodes[savedAuthCode] && savedActivation) {
+                const activated = new Date(savedActivation);
+                const expiry = new Date(activated);
+                expiry.setFullYear(expiry.getFullYear() + 1);
+                
+                const now = new Date();
+                if (now <= expiry) {
+                    console.log('授权有效');
+                    showMainContent(savedAuthCode, expiry);
+                } else {
+                    console.log('授权已过期');
+                    clearAuthAndShowPanel();
+                }
+            } else {
+                console.log('无有效授权');
+                clearAuthAndShowPanel();
+            }
+        }
+
+        // 显示主内容
+        function showMainContent(authCode, expiry) {
+            // 隐藏验证界面，显示主内容
+            document.getElementById('authPanel').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            
+            // 自动填充并禁用输入
+            const authInput = document.getElementById('authCode');
+            const verifyButton = document.getElementById('verifyAuth');
+            if (authInput && verifyButton) {
+                authInput.value = authCode;
+                authInput.disabled = true;
+                verifyButton.disabled = true;
+            }
+
+            // 显示剩余天数
+            const remainingDays = Math.ceil((expiry - new Date()) / (1000 * 60 * 60 * 24));
+            console.log(`授权码有效，剩余${remainingDays}天`);
+            alert(`授权码有效，剩余${remainingDays}天`);
+        }
+
+        // 清除授权并显示验证面板
+        function clearAuthAndShowPanel() {
+            localStorage.removeItem('authCode');
+            localStorage.removeItem('authActivated');
+            
+            const authPanel = document.getElementById('authPanel');
+            const mainContent = document.getElementById('mainContent');
+            if (authPanel && mainContent) {
+                authPanel.style.display = 'block';
+                mainContent.style.display = 'none';
+            }
+        }
+
+        // 验证授权码
         function verifyAuthCode() {
             console.log('验证按钮被点击');
             const authCode = document.getElementById('authCode').value.trim();
@@ -949,7 +1022,7 @@
                 return;
             }
 
-            // 如果是新激活或已过期
+            // 设置新的激活时间和过期时间
             const now = new Date();
             const expiry = new Date(now);
             expiry.setFullYear(expiry.getFullYear() + 1);
@@ -958,71 +1031,9 @@
             localStorage.setItem('authCode', authCode);
             localStorage.setItem('authActivated', now.toISOString());
             
-            // 隐藏验证界面，显示主内容
-            document.getElementById('authPanel').style.display = 'none';
-            document.getElementById('mainContent').style.display = 'block';
-            
-            // 禁用输入和验证按钮
-            document.getElementById('authCode').disabled = true;
-            document.getElementById('verifyAuth').disabled = true;
-            
-            alert('授权码验证成功！有效期至：' + expiry.toLocaleDateString());
+            // 显示主内容
+            showMainContent(authCode, expiry);
         }
-
-        // 页面加载完成后立即执行
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('页面加载完成');
-            
-            // 绑定验证按钮点击事件
-            const verifyButton = document.getElementById('verifyAuth');
-            if (verifyButton) {
-                verifyButton.addEventListener('click', verifyAuthCode);
-                console.log('验证按钮事件已绑定');
-            }
-            
-            // 检查已保存的授权码
-            const savedAuthCode = localStorage.getItem('authCode');
-            const savedActivation = localStorage.getItem('authActivated');
-            console.log('已保存的授权码:', savedAuthCode);
-            
-            if (savedAuthCode && validAuthCodes[savedAuthCode]) {
-                if (savedActivation) {
-                    const activated = new Date(savedActivation);
-                    const expiry = new Date(activated);
-                    expiry.setFullYear(expiry.getFullYear() + 1);
-                    
-                    const now = new Date();
-                    if (now <= expiry) {
-                        // 显示授权信息
-                        const remainingDays = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
-                        console.log(`授权码有效，剩余${remainingDays}天`);
-                        
-                        // 隐藏验证界面，显示主内容
-                        document.getElementById('authPanel').style.display = 'none';
-                        document.getElementById('mainContent').style.display = 'block';
-                        
-                        // 自动填充并禁用输入
-                        document.getElementById('authCode').value = savedAuthCode;
-                        document.getElementById('authCode').disabled = true;
-                        document.getElementById('verifyAuth').disabled = true;
-                        
-                        // 显示剩余天数
-                        alert(`授权码有效，剩余${remainingDays}天`);
-                    } else {
-                        console.log('授权已过期');
-                        localStorage.removeItem('authCode');
-                        localStorage.removeItem('authActivated');
-                        // 显示验证界面
-                        document.getElementById('authPanel').style.display = 'block';
-                        document.getElementById('mainContent').style.display = 'none';
-                    }
-                }
-            } else {
-                // 如果没有有效的授权码，显示验证界面
-                document.getElementById('authPanel').style.display = 'block';
-                document.getElementById('mainContent').style.display = 'none';
-            }
-        });
 
         // 添加新的JavaScript函数
         function applyBackgroundSuggestion(button) {
