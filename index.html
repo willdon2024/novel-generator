@@ -483,7 +483,7 @@
                             </select>
                         </div>
                         <div class="step-actions">
-                            <button class="btn btn-primary" onclick="nextStep(1)">下一步</button>
+                            <button class="btn btn-primary next-step-btn" onclick="nextStep()">下一步</button>
                         </div>
                     </div>
                     
@@ -1153,12 +1153,17 @@ ${currentContent}
             
             try {
                 // 验证输入
-                const title = document.getElementById('novelTitle').value.trim();
+                const title = document.getElementById('title').value.trim();
                 const type = document.getElementById('novelType').value;
                 
                 if (!title || !type) {
                     alert('请填写小说标题和选择类型');
                     return;
+                }
+                
+                // 如果是第一步，生成背景
+                if (currentStep === 1) {
+                    await generateBackground();
                 }
                 
                 currentStep++;
