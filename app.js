@@ -213,14 +213,24 @@ const progressManager = appState.progressManager;
 document.addEventListener('DOMContentLoaded', function() {
     console.log('页面加载完成');
     
-    // 检查授权状态
+    // 首先检查授权状态
     if (appState.checkAuthStatus()) {
         // 显示剩余天数
         const remainingDays = Math.ceil((appState.authExpiry - new Date()) / (1000 * 60 * 60 * 24));
         console.log(`授权码有效，剩余${remainingDays}天`);
         
+        // 显示主界面
+        document.getElementById('authPanel').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+        
         // 恢复之前的状态
-        restoreState();
+        setTimeout(() => {
+            restoreState();
+        }, 100);
+    } else {
+        // 未授权或授权过期，显示授权界面
+        document.getElementById('authPanel').style.display = 'block';
+        document.getElementById('mainContent').style.display = 'none';
     }
     
     // 绑定验证按钮点击事件
