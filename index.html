@@ -449,7 +449,61 @@
                 document.getElementById('contentArea').value = response.choices[0].message.content;
                 document.getElementById('continueGenerate').style.display = 'block';
                 document.getElementById('continueGenerate').disabled = false;
-                currentStage = 2; // 从序章开始
+                
+                // 添加引导提示
+                const guidance = document.createElement('div');
+                guidance.className = 'alert alert-info mt-3';
+                guidance.innerHTML = `
+                    <h5>🎉 故事背景已生成！</h5>
+                    <p>请仔细阅读上面生成的内容：</p>
+                    <ul>
+                        <li>如果对背景设定满意，请点击"生成详细大纲"继续</li>
+                        <li>如果需要修改，可以：
+                            <ul>
+                                <li>直接在文本框中编辑</li>
+                                <li>使用下方的"人工干涉"功能调整</li>
+                                <li>或点击"重新生成"按钮重新生成背景</li>
+                            </ul>
+                        </li>
+                    </ul>
+                `;
+                document.getElementById('contentArea').parentNode.insertBefore(guidance, document.getElementById('contentArea').nextSibling);
+                
+                // 添加重新生成按钮
+                const regenerateBtn = document.createElement('button');
+                regenerateBtn.className = 'btn btn-secondary me-2';
+                regenerateBtn.textContent = '重新生成背景';
+                regenerateBtn.onclick = async function() {
+                    if (confirm('确定要重新生成背景吗？当前内容将被覆盖。')) {
+                        this.disabled = true;
+                        document.getElementById('continueGenerate').disabled = true;
+                        document.getElementById('contentArea').value = '正在重新生成背景，请稍候...';
+                        try {
+                            const response = await callMoonshotAPI(apiKey, {
+                                messages: [
+                                    {
+                                        role: "system",
+                                        content: `你是一个专业的${novelType}小说大纲策划师。首先生成故事背景设定和主要人物介绍。`
+                                    },
+                                    {
+                                        role: "user",
+                                        content: `请为题为《${title}》的${novelType}小说创作开始部分的大纲，包括：\n1. 详细的故事背景设定\n2. 主要人物介绍\n请确保内容详实，为后续章节做好铺垫。`
+                                    }
+                                ]
+                            });
+                            document.getElementById('contentArea').value = response.choices[0].message.content;
+                        } catch (error) {
+                            console.error('Error:', error);
+                            document.getElementById('contentArea').value = '生成失败，请稍后重试';
+                        }
+                        this.disabled = false;
+                        document.getElementById('continueGenerate').disabled = false;
+                    }
+                };
+                document.getElementById('continueGenerate').parentNode.insertBefore(regenerateBtn, document.getElementById('continueGenerate'));
+                
+                // 修改继续生成按钮的文本
+                document.getElementById('continueGenerate').textContent = '生成详细大纲';
                 
                 clearInterval(progressInterval);
                 updateProgress(100);
@@ -550,11 +604,27 @@
             try {
                 if (isGeneratingOutline) {
                     if (currentStage === outlineStages.length) {
-                        // 大纲生成完成
+                        // 大纲生成完成后的引导
+                        const outlineGuidance = document.createElement('div');
+                        outlineGuidance.className = 'alert alert-success mt-3';
+                        outlineGuidance.innerHTML = `
+                            <h5>✨ 详细大纲已生成完成！</h5>
+                            <p>现在您可以：</p>
+                            <ol>
+                                <li>切换到"章节内容模式"开始生成具体章节</li>
+                                <li>或继续修改大纲直到满意为止</li>
+                            </ol>
+                            <p>建议：先仔细阅读大纲，确保整体故事架构符合预期，再开始生成具体章节内容。</p>
+                        `;
+                        document.getElementById('contentArea').parentNode.insertBefore(outlineGuidance, document.getElementById('contentArea').nextSibling);
+                        
+                        // 自动显示切换模式的提示
+                        document.querySelector('.mode-switch').style.animation = 'highlight 2s infinite';
+                        setTimeout(() => document.querySelector('.mode-switch').style.animation = '', 6000);
+                        
                         this.style.display = 'none';
-                        originalOutline = document.getElementById('contentArea').value;
-                        alert('大纲生成完成！您可以开始生成具体章节内容了。');
-                return;
+                        document.getElementById('generateChapter').style.display = 'block';
+                        return;
                     }
 
                     const response = await callMoonshotAPI(apiKey, {
