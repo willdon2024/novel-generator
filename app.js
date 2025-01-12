@@ -238,26 +238,25 @@ document.addEventListener('DOMContentLoaded', function() {
             alert(result.message);
         });
         console.log('验证按钮事件已绑定');
-    } else {
-        console.error('找不到验证按钮元素');
     }
     
-    // 绑定重新生成按钮
-    const regenerateBtn = document.querySelector('.regenerate-btn');
-    if (regenerateBtn) {
-        regenerateBtn.addEventListener('click', function() {
+    // 绑定第二步的重新生成按钮
+    const backgroundRegenerateBtn = document.querySelector('#step2 .regenerate-btn');
+    if (backgroundRegenerateBtn) {
+        backgroundRegenerateBtn.addEventListener('click', function() {
+            console.log('点击重新生成背景按钮');
             generateBackground();
         });
     }
     
-    // 绑定保存按钮
-    const saveBtn = document.querySelector('.save-btn');
-    if (saveBtn) {
-        saveBtn.addEventListener('click', function() {
+    // 绑定第二步的保存按钮
+    const backgroundSaveBtn = document.querySelector('#step2 .save-btn');
+    if (backgroundSaveBtn) {
+        backgroundSaveBtn.addEventListener('click', function() {
             const backgroundText = document.getElementById('backgroundText');
             if (backgroundText && backgroundText.value.trim()) {
-                // 这里添加保存逻辑
-                alert('内容已保存！');
+                alert('背景内容已保存！');
+                saveCurrentState();
             }
         });
     }
@@ -266,6 +265,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const outlineRegenerateBtn = document.querySelector('#step3 .regenerate-btn');
     if (outlineRegenerateBtn) {
         outlineRegenerateBtn.addEventListener('click', function() {
+            console.log('点击重新生成大纲按钮');
             generateOutline();
         });
     }
@@ -282,19 +282,21 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // 绑定"确认并继续"按钮
-    const confirmButtons = document.querySelectorAll('.confirm-btn');
-    confirmButtons.forEach(button => {
+    // 绑定下一步按钮
+    const nextButtons = document.querySelectorAll('.next-btn, .confirm-btn');
+    nextButtons.forEach(button => {
         button.addEventListener('click', function() {
+            console.log('点击下一步按钮');
             const currentStep = parseInt(this.closest('.tab-pane').id.replace('step', ''));
             nextStep(currentStep);
         });
     });
     
-    // 绑定"上一步"按钮
+    // 绑定上一步按钮
     const prevButtons = document.querySelectorAll('.prev-btn');
     prevButtons.forEach(button => {
         button.addEventListener('click', function() {
+            console.log('点击上一步按钮');
             const currentStep = parseInt(this.closest('.tab-pane').id.replace('step', ''));
             prevStep(currentStep);
         });
