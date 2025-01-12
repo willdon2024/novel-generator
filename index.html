@@ -376,6 +376,42 @@
             font-size: 0.9rem;
             margin-top: 0.5rem;
         }
+
+        .chapter-tree {
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .chapter-item, .section-item {
+            padding: 0.5rem;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-bottom: 0.25rem;
+            transition: background-color 0.2s;
+        }
+
+        .chapter-item:hover, .section-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .chapter-item.active, .section-item.active {
+            background-color: #e9ecef;
+        }
+
+        .section-item {
+            margin-left: 1.5rem;
+        }
+
+        .generation-progress {
+            margin-top: 1rem;
+        }
+
+        .btn-group {
+            gap: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -554,32 +590,31 @@
                     <!-- 步骤4：章节生成 -->
                     <div class="step-content" id="step4">
                         <h5 class="card-title">第四步：生成章节内容</h5>
-                        <div class="chapter-selection mb-3">
-                            <label for="chapterSelect" class="form-label">选择要生成的章节</label>
-                            <select class="form-select" id="chapterSelect">
-                                <option value="" disabled selected>请选择章节</option>
-                            </select>
+                        <div class="chapter-tree mb-3" id="chapterTree">
+                            <!-- 章节列表将在这里动态生成 -->
+                        </div>
+                        <div class="btn-group w-100 mb-3">
+                            <button class="btn btn-outline-primary" onclick="addChapter()">添加章</button>
+                            <button class="btn btn-outline-primary" onclick="addSection()">添加节</button>
+                            <button class="btn btn-outline-danger" onclick="deleteItem()">删除</button>
                         </div>
                         <div class="content-area-wrapper">
-                            <textarea class="content-area" id="chapterContent" placeholder="请选择要生成的章节..."></textarea>
-                        </div>
-                        <div class="intervention-panel">
-                            <h6>章节调整</h6>
-                            <div class="input-group mb-3">
-                                <input type="text" class="form-control" id="chapterModification" placeholder="输入修改建议，例如：'增加细节描写'">
-                                <button class="btn btn-primary" onclick="applyChapterModification()">应用修改</button>
-                            </div>
-                            <div class="suggestion-tags">
-                                <button class="btn btn-sm btn-outline-secondary" onclick="selectChapterSuggestion(this)">增加细节描写</button>
-                                <button class="btn btn-sm btn-outline-secondary" onclick="selectChapterSuggestion(this)">加强情感刻画</button>
-                                <button class="btn btn-sm btn-outline-secondary" onclick="selectChapterSuggestion(this)">优化场景描写</button>
+                            <textarea class="content-area" id="chapterContent" placeholder="选择章节后点击生成按钮开始生成内容..."></textarea>
+                            <div class="generation-progress" style="display: none;">
+                                <div class="progress">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"></div>
+                                </div>
+                                <p class="text-center text-muted loading-text">正在生成内容，请稍候...</p>
                             </div>
                         </div>
-                        <div class="step-actions">
+                        <div class="btn-group w-100 mt-3">
+                            <button class="btn btn-primary" onclick="generateContent()">生成内容</button>
+                            <button class="btn btn-success" onclick="saveContent()">保存内容</button>
+                            <button class="btn btn-warning" onclick="regenerateContent()">重新生成</button>
+                        </div>
+                        <div class="step-actions mt-3">
                             <button class="btn btn-secondary" onclick="prevStep(4)">上一步</button>
-                            <button class="btn btn-warning" onclick="regenerateChapter()">重新生成</button>
-                            <button class="btn btn-success" onclick="saveChapter()">保存章节</button>
-                            <button class="btn btn-primary" onclick="nextStep(4)">完成并导出</button>
+                            <button class="btn btn-primary" onclick="nextStep(4)">下一步</button>
                         </div>
                     </div>
                     
@@ -1643,6 +1678,160 @@ ${content}
                     indicator.classList.remove('completed', 'active');
                 }
             });
+        }
+
+        // 添加新的章节管理功能
+        let chapters = [];
+        let selectedItem = null;
+
+        function addChapter() {
+            const chapterName = prompt('请输入章的标题：');
+            if (chapterName) {
+                const chapter = {
+                    id: Date.now(),
+                    type: 'chapter',
+                    title: `第${chapters.length + 1}章 ${chapterName}`,
+                    sections: []
+                };
+                chapters.push(chapter);
+                updateChapterTree();
+            }
+        }
+
+        function addSection() {
+            if (!selectedItem || selectedItem.type !== 'chapter') {
+                alert('请先选择一个章！');
+                return;
+            }
+
+            const sectionName = prompt('请输入节的标题：');
+            if (sectionName) {
+                const chapter = chapters.find(c => c.id === selectedItem.id);
+                if (chapter) {
+                    chapter.sections.push({
+                        id: Date.now(),
+                        type: 'section',
+                        title: `第${chapter.sections.length + 1}节 ${sectionName}`
+                    });
+                    updateChapterTree();
+                }
+            }
+        }
+
+        function deleteItem() {
+            if (!selectedItem) {
+                alert('请先选择要删除的项目！');
+                return;
+            }
+
+            if (confirm('确定要删除吗？')) {
+                if (selectedItem.type === 'chapter') {
+                    chapters = chapters.filter(c => c.id !== selectedItem.id);
+                } else {
+                    const chapter = chapters.find(c => c.sections.some(s => s.id === selectedItem.id));
+                    if (chapter) {
+                        chapter.sections = chapter.sections.filter(s => s.id !== selectedItem.id);
+                    }
+                }
+                selectedItem = null;
+                updateChapterTree();
+            }
+        }
+
+        function updateChapterTree() {
+            const tree = document.getElementById('chapterTree');
+            tree.innerHTML = '';
+            
+            chapters.forEach(chapter => {
+                const chapterDiv = document.createElement('div');
+                chapterDiv.className = `chapter-item ${selectedItem && selectedItem.id === chapter.id ? 'active' : ''}`;
+                chapterDiv.onclick = () => selectItem(chapter);
+                chapterDiv.innerHTML = `<i class="bi bi-book"></i> ${chapter.title}`;
+                tree.appendChild(chapterDiv);
+                
+                chapter.sections.forEach(section => {
+                    const sectionDiv = document.createElement('div');
+                    sectionDiv.className = `section-item ms-4 ${selectedItem && selectedItem.id === section.id ? 'active' : ''}`;
+                    sectionDiv.onclick = () => selectItem(section);
+                    sectionDiv.innerHTML = `<i class="bi bi-file-text"></i> ${section.title}`;
+                    tree.appendChild(sectionDiv);
+                });
+            });
+        }
+
+        function selectItem(item) {
+            selectedItem = item;
+            updateChapterTree();
+            // 清空内容区
+            document.getElementById('chapterContent').value = '';
+        }
+
+        // 添加生成内容的功能
+        async function generateContent() {
+            if (!selectedItem || selectedItem.type !== 'section') {
+                alert('请先选择一个小节！');
+                return;
+            }
+
+            const chapter = chapters.find(c => c.sections.some(s => s.id === selectedItem.id));
+            if (!chapter) return;
+
+            showLoading();
+            try {
+                const response = await fetch('/generate_section', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: document.getElementById('title').value,
+                        genre: document.getElementById('novelType').value,
+                        chapter_title: chapter.title,
+                        chapter_number: chapters.indexOf(chapter) + 1,
+                        section_number: chapter.sections.findIndex(s => s.id === selectedItem.id) + 1,
+                        session_id: Date.now().toString(),
+                        background: backgroundContent,
+                        outline: outlineContent
+                    })
+                });
+
+                const data = await response.json();
+                if (data.status === 'success') {
+                    document.getElementById('chapterContent').value = data.content;
+                } else {
+                    alert('生成失败：' + data.message);
+                }
+            } catch (error) {
+                alert('生成失败：' + error.message);
+            }
+            hideLoading();
+        }
+
+        function showLoading() {
+            document.querySelector('.generation-progress').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.querySelector('.generation-progress').style.display = 'none';
+        }
+
+        function saveContent() {
+            if (!selectedItem || !document.getElementById('chapterContent').value) {
+                alert('请先生成内容！');
+                return;
+            }
+            
+            const content = document.getElementById('chapterContent').value;
+            savedChapters[selectedItem.id] = content;
+            alert('内容已保存！');
+        }
+
+        function regenerateContent() {
+            if (!selectedItem) {
+                alert('请先选择一个小节！');
+                return;
+            }
+            generateContent();
         }
     </script>
 </body>
