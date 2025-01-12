@@ -928,26 +928,6 @@
                 return;
             }
 
-            // 检查是否已激活
-            const savedAuthCode = localStorage.getItem('authCode');
-            const savedActivation = localStorage.getItem('authActivated');
-            
-            if (savedAuthCode === authCode && savedActivation) {
-                const activated = new Date(savedActivation);
-                const expiry = new Date(activated);
-                expiry.setFullYear(expiry.getFullYear() + 1);
-                
-                if (new Date() <= expiry) {
-                    document.getElementById('authPanel').style.display = 'none';
-                    document.getElementById('mainContent').style.display = 'block';
-                    
-                    // 显示授权信息
-                    const remainingDays = Math.ceil((expiry - new Date()) / (1000 * 60 * 60 * 24));
-                    alert(`授权码有效！剩余有效期：${remainingDays}天`);
-                    return;
-                }
-            }
-
             // 如果是新激活或已过期
             const now = new Date();
             const expiry = new Date(now);
@@ -960,6 +940,10 @@
             // 隐藏验证界面，显示主内容
             document.getElementById('authPanel').style.display = 'none';
             document.getElementById('mainContent').style.display = 'block';
+            
+            // 禁用输入和验证按钮
+            document.getElementById('authCode').disabled = true;
+            document.getElementById('verifyAuth').disabled = true;
             
             alert('授权码验证成功！有效期至：' + expiry.toLocaleDateString());
         }
@@ -980,29 +964,31 @@
             const savedActivation = localStorage.getItem('authActivated');
             console.log('已保存的授权码:', savedAuthCode);
             
-            if (savedAuthCode && validAuthCodes[savedAuthCode] && savedActivation) {
-                const activated = new Date(savedActivation);
-                const expiry = new Date(activated);
-                expiry.setFullYear(expiry.getFullYear() + 1);
-                
-                const now = new Date();
-                if (now <= expiry) {
-                    // 显示授权信息
-                    const remainingDays = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
-                    console.log(`授权码有效，剩余${remainingDays}天`);
+            if (savedAuthCode && validAuthCodes[savedAuthCode]) {
+                if (savedActivation) {
+                    const activated = new Date(savedActivation);
+                    const expiry = new Date(activated);
+                    expiry.setFullYear(expiry.getFullYear() + 1);
                     
-                    // 自动填充并禁用输入
-                    document.getElementById('authCode').value = savedAuthCode;
-                    document.getElementById('authCode').disabled = true;
-                    document.getElementById('verifyAuth').disabled = true;
-                    
-                    // 显示主内容
-                    document.getElementById('authPanel').style.display = 'none';
-                    document.getElementById('mainContent').style.display = 'block';
-                } else {
-                    console.log('授权已过期');
-                    localStorage.removeItem('authCode');
-                    localStorage.removeItem('authActivated');
+                    const now = new Date();
+                    if (now <= expiry) {
+                        // 显示授权信息
+                        const remainingDays = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
+                        console.log(`授权码有效，剩余${remainingDays}天`);
+                        
+                        // 隐藏验证界面，显示主内容
+                        document.getElementById('authPanel').style.display = 'none';
+                        document.getElementById('mainContent').style.display = 'block';
+                        
+                        // 自动填充并禁用输入
+                        document.getElementById('authCode').value = savedAuthCode;
+                        document.getElementById('authCode').disabled = true;
+                        document.getElementById('verifyAuth').disabled = true;
+                    } else {
+                        console.log('授权已过期');
+                        localStorage.removeItem('authCode');
+                        localStorage.removeItem('authActivated');
+                    }
                 }
             }
         });
