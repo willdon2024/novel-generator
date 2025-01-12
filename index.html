@@ -631,6 +631,12 @@
                         return;
                     }
 
+                    // 定义不同阶段的提示语
+                    const prompts = {
+                        0: `请为题为《${title}》的${novelType}小说规划整体故事架构和发展脉络，包括：\n1. 故事主线梗概\n2. 重要转折点\n3. 故事高潮和结局\n请确保故事结构完整，情节发展合理。`,
+                        1: `请基于以下整体规划，为《${title}》详细展开每个章节的具体内容：\n\n${currentContent}\n\n要求：\n1. 为每个重要情节规划具体章节\n2. 简述每章主要内容\n3. 确保章节之间衔接自然\n4. 保持故事节奏的张弛有度`
+                    };
+
                     const response = await callMoonshotAPI(apiKey, {
                         messages: [
                             {
@@ -642,9 +648,7 @@
                             },
                             {
                                 role: "user",
-                                content: currentStage === 1 ? 
-                                    `${prompt}\n\n已有的整体规划：\n${currentContent}` : 
-                                    prompt
+                                content: prompts[currentStage]
                             }
                         ]
                     });
@@ -653,14 +657,18 @@
                         currentContent + '\n\n详细章节大纲：\n' + response.choices[0].message.content :
                         response.choices[0].message.content;
                     
+                    currentStage++;
                     if (currentStage < outlineStages.length) {
-                        this.textContent = currentStage === 1 ? '完成大纲' : '生成详细大纲';
+                        this.textContent = '生成详细大纲';
+                        this.disabled = false;
+                    } else {
+                        this.textContent = '完成大纲';
                         this.disabled = false;
                     }
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('生成失败，请稍后重试');
+                document.getElementById('contentArea').value = '生成失败，请稍后重试';
                 this.disabled = false;
             }
         });
