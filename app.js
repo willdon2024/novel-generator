@@ -397,6 +397,41 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+    
+    // 绑定API Key验证按钮点击事件
+    const apiKeyConfirmBtn = document.querySelector('.api-key-confirm');
+    if (apiKeyConfirmBtn) {
+        apiKeyConfirmBtn.addEventListener('click', function() {
+            console.log('点击API Key确认按钮');
+            const apiKeyInput = document.querySelector('input[type="password"]');
+            if (apiKeyInput) {
+                const apiKey = apiKeyInput.value.trim();
+                if (apiKey) {
+                    // 保存API Key
+                    appState.setApiKey(apiKey);
+                    
+                    // 禁用输入框和按钮
+                    apiKeyInput.disabled = true;
+                    this.disabled = true;
+                    
+                    // 显示成功提示
+                    const successTip = document.createElement('div');
+                    successTip.className = 'alert alert-success mt-2';
+                    successTip.innerHTML = '<strong>✓ API Key已保存！</strong>';
+                    apiKeyInput.parentNode.appendChild(successTip);
+                    
+                    // 3秒后自动进入下一步
+                    setTimeout(() => {
+                        const currentStep = progressManager.currentStep;
+                        nextStep(currentStep);
+                    }, 1500);
+                } else {
+                    alert('请输入API Key');
+                }
+            }
+        });
+        console.log('API Key确认按钮事件已绑定');
+    }
 });
 
 // 步骤切换函数
@@ -930,8 +965,21 @@ function generateOutline() {
     }, 12000);
 }
 
-// 保存当前状态到 localStorage
-function saveCurrentState() {
+// 添加防抖函数
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// 使用防抖优化的保存状态函数
+const debouncedSaveState = debounce(function() {
     const state = {
         currentStep: progressManager.currentStep,
         novelTitle: document.getElementById('novelTitle')?.value || '',
@@ -942,10 +990,27 @@ function saveCurrentState() {
     };
     localStorage.setItem('novelGeneratorState', JSON.stringify(state));
     console.log('状态已保存:', state);
-}
+}, 1000); // 1秒后执行保存
 
-// 从 localStorage 恢复状态
+// 修改事件监听，使用防抖的保存函数
+document.addEventListener('input', function(e) {
+    if (['novelTitle', 'novelGenre', 'backgroundText', 'outlineText'].includes(e.target.id)) {
+        debouncedSaveState();
+    }
+});
+
+// 修改状态恢复函数，确保在DOM完全加载后执行
 function restoreState() {
+    // 确保DOM已经完全加载
+    if (!document.getElementById('novelTitle') || 
+        !document.getElementById('novelGenre') || 
+        !document.getElementById('backgroundText') || 
+        !document.getElementById('outlineText')) {
+        console.log('DOM元素未完全加载，延迟恢复状态');
+        setTimeout(restoreState, 100);
+        return;
+    }
+
     const savedState = localStorage.getItem('novelGeneratorState');
     if (savedState) {
         const state = JSON.parse(savedState);
@@ -964,13 +1029,19 @@ function restoreState() {
         // 恢复背景内容
         if (state.backgroundText) {
             const backgroundText = document.getElementById('backgroundText');
-            if (backgroundText) backgroundText.value = state.backgroundText;
+            if (backgroundText) {
+                backgroundText.value = state.backgroundText;
+                backgroundText.disabled = true; // 确保文本框默认是禁用的
+            }
         }
         
         // 恢复大纲内容
         if (state.outlineText) {
             const outlineText = document.getElementById('outlineText');
-            if (outlineText) outlineText.value = state.outlineText;
+            if (outlineText) {
+                outlineText.value = state.outlineText;
+                outlineText.disabled = true; // 确保文本框默认是禁用的
+            }
         }
         
         // 恢复到正确的步骤
@@ -1002,13 +1073,6 @@ function restoreState() {
         }
     }
 }
-
-// 在内容变化时保存状态
-document.addEventListener('input', function(e) {
-    if (['novelTitle', 'novelGenre', 'backgroundText', 'outlineText'].includes(e.target.id)) {
-        saveCurrentState();
-    }
-});
 
 // 导出Word文档
 function exportToWord(content, filename) {
