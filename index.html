@@ -1,0 +1,1975 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小说生成器</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+        .container {
+            max-width: 1000px;
+            padding: 2rem;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            background: white;
+            border: none;
+        }
+        .card-body {
+            padding: 2rem;
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+            border: 1px solid #dee2e6;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        .btn {
+            height: 42px;
+            border-radius: 8px !important;
+            padding: 0 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            white-space: nowrap;
+        }
+        .btn-primary {
+            background-color: #0d6efd;
+            border: none;
+            width: 100%;
+        }
+        .btn-primary:hover {
+            background-color: #0b5ed7;
+            transform: translateY(-1px);
+        }
+        .btn-primary:disabled {
+            background-color: #0d6efd;
+            opacity: 0.65;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #333;
+            font-weight: bold;
+        }
+        label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #555;
+        }
+        optgroup {
+            font-weight: 900 !important;
+            color: #0d6efd !important;
+            font-size: 1.2em !important;
+            text-transform: uppercase;
+            padding: 8px 0;
+            border-bottom: 2px solid #0d6efd;
+            margin-bottom: 8px;
+            background-color: #f8f9fa;
+        }
+        .form-select optgroup {
+            font-weight: 900 !important;
+            color: #0d6efd !important;
+        }
+        option {
+            font-size: 1em;
+            padding: 8px;
+            margin: 4px 0;
+        }
+        .mode-switch {
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background: #fff3cd;
+            border-radius: 10px;
+        }
+        .mode-switch .btn-group {
+            display: flex;
+            width: 100%;
+            gap: 8px;
+        }
+        .mode-switch .btn {
+            flex: 1;
+            margin: 0;
+        }
+        .content-area {
+            width: 100%;
+            min-height: 600px;
+            padding: 1rem;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+            line-height: 1.6;
+            resize: vertical;
+            white-space: pre-wrap;
+        }
+        .edit-tools {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .edit-tools button {
+            width: 100%;
+            margin: 0;
+            height: 42px;
+        }
+        .edit-tools.has-continue {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+        .export-tools {
+            margin-top: 1rem;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+        .export-tools button {
+            width: 100%;
+            margin: 0;
+        }
+        .btn-outline-primary {
+            border-color: #0d6efd;
+            color: #0d6efd;
+            background-color: white;
+        }
+        .btn-outline-primary:hover {
+            background-color: #0d6efd;
+            color: white;
+            transform: translateY(-1px);
+        }
+        .btn-success {
+            background-color: #198754;
+            color: white;
+            border: none;
+        }
+        .btn-success:hover {
+            background-color: #157347;
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+        }
+        .btn-secondary:hover {
+            background-color: #5c636a;
+            transform: translateY(-1px);
+        }
+        .chapter-select {
+            background: #fff;
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid #dee2e6;
+        }
+        .card-title {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            font-size: 1.25rem;
+        }
+        .progress {
+            height: 10px;
+            margin: 1rem 0;
+            display: none;
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+        .api-key-group {
+            display: flex;
+            gap: 1rem;
+            align-items: stretch;
+        }
+        .api-key-group .btn {
+            margin: 0;
+            min-width: 80px;
+            height: calc(3rem + 2px);
+            padding: 0 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #generateBtn {
+            width: auto !important;
+            min-width: 200px;
+            margin: 0 auto;
+        }
+        .suggestion-tags {
+            text-align: center;
+        }
+        .suggestion-tags button {
+            height: 32px;
+            padding: 0 1rem;
+            font-size: 0.9rem;
+            margin: 0.25rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .input-group .btn {
+            margin: 0;
+            min-width: 100px;
+        }
+        /* 添加步骤指示器样式 */
+        .steps-indicator {
+            margin: 2rem 0;
+            padding: 0;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+        }
+        
+        .steps-indicator::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #dee2e6;
+            z-index: 1;
+        }
+        
+        .step-item {
+            position: relative;
+            z-index: 2;
+            background: white;
+            padding: 0 1rem;
+            text-align: center;
+            flex: 1;
+        }
+        
+        .step-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #dee2e6;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem;
+            font-weight: bold;
+        }
+        
+        .step-title {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin: 0;
+        }
+        
+        .step-item.active .step-number {
+            background: #0d6efd;
+            color: white;
+        }
+        
+        .step-item.active .step-title {
+            color: #0d6efd;
+            font-weight: bold;
+        }
+        
+        .step-item.completed .step-number {
+            background: #198754;
+            color: white;
+        }
+        
+        .step-content {
+            display: none;
+        }
+        
+        .step-content.active {
+            display: block;
+        }
+        
+        .step-actions {
+            margin-top: 1rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+        
+        .intervention-panel {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .intervention-panel h6 {
+            margin-bottom: 1rem;
+            color: #0d6efd;
+        }
+        
+        /* 添加动画效果 */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .step-content.active {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .btn-loading {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .btn-loading::after {
+            content: '...';
+            display: inline-block;
+            animation: loading 1s infinite;
+        }
+
+        @keyframes loading {
+            0% { content: '.'; }
+            33% { content: '..'; }
+            66% { content: '...'; }
+        }
+
+        /* 添加进度条样式 */
+        .progress-container {
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .progress {
+            height: 4px;
+            background-color: #f0f0f0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: #0d6efd;
+            width: 0;
+            transition: width 0.3s ease;
+            animation: progress-animation 2s infinite;
+        }
+
+        @keyframes progress-animation {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+
+        .loading-text {
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .chapter-tree {
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .chapter-item, .section-item {
+            padding: 0.5rem;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-bottom: 0.25rem;
+            transition: background-color 0.2s;
+        }
+
+        .chapter-item:hover, .section-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .chapter-item.active, .section-item.active {
+            background-color: #e9ecef;
+        }
+
+        .section-item {
+            margin-left: 1.5rem;
+        }
+
+        .generation-progress {
+            margin-top: 1rem;
+        }
+
+        .btn-group {
+            gap: 0.5rem;
+        }
+
+        /* 添加进度条样式 */
+        .generation-progress {
+            margin: 20px 0;
+            display: none;
+        }
+        .progress {
+            height: 6px;
+            border-radius: 3px;
+            background-color: #e9ecef;
+            overflow: hidden;
+        }
+        .progress-bar {
+            width: 0;
+            height: 100%;
+            background-color: #0d6efd;
+            transition: width 0.3s ease;
+        }
+        .loading-text {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>小说生成器</h1>
+        
+        <!-- 授权验证部分 -->
+        <div class="card mb-4" id="authPanel">
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="authCode" class="form-label">授权码</label>
+                    <div class="api-key-group">
+                        <input type="password" class="form-control" id="authCode" required>
+                        <button type="button" class="btn btn-primary" id="verifyAuth">验证</button>
+                    </div>
+                    <small class="text-muted">请输入您的授权码</small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 主要内容部分 -->
+        <div id="mainContent" style="display: none;">
+            <!-- API Key 设置 -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="apiKey" class="form-label">Moonshot API Key</label>
+                        <div class="api-key-group">
+                            <input type="password" class="form-control" id="apiKey" required>
+                            <button type="button" class="btn btn-primary" id="confirmApiKey">确认</button>
+                        </div>
+                        <small class="text-muted">请输入你的 Moonshot API Key</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 步骤指示器 -->
+            <ul class="steps-indicator">
+                <li class="step-item active" data-step="1">
+                    <div class="step-number">1</div>
+                    <p class="step-title">确认标题</p>
+                </li>
+                <li class="step-item" data-step="2">
+                    <div class="step-number">2</div>
+                    <p class="step-title">故事背景</p>
+                </li>
+                <li class="step-item" data-step="3">
+                    <div class="step-number">3</div>
+                    <p class="step-title">生成大纲</p>
+                </li>
+                <li class="step-item" data-step="4">
+                    <div class="step-number">4</div>
+                    <p class="step-title">章节生成</p>
+                </li>
+                <li class="step-item" data-step="5">
+                    <div class="step-number">5</div>
+                    <p class="step-title">内容完善</p>
+                </li>
+            </ul>
+            
+            <!-- 步骤内容 -->
+            <div class="card">
+                <div class="card-body">
+                    <!-- 步骤1：确认标题 -->
+                    <div class="step-content active" id="step1">
+                        <h5 class="card-title">第一步：确认小说标题和类型</h5>
+                        <div class="mb-3">
+                            <label for="title" class="form-label">小说标题</label>
+                            <input type="text" class="form-control" id="title" required placeholder="请输入小说标题">
+                        </div>
+                        <div class="mb-3">
+                            <label for="novelType" class="form-label">小说类型</label>
+                            <select class="form-select" id="novelType" required>
+                                <option value="" disabled selected>请选择小说类型</option>
+                                <optgroup label="玄幻仙侠">
+                                    <option value="玄幻修真">玄幻修真</option>
+                                    <option value="武侠江湖">武侠江湖</option>
+                                    <option value="仙侠修仙">仙侠修仙</option>
+                                    <option value="东方奇幻">东方奇幻</option>
+                                </optgroup>
+                                <optgroup label="现代都市">
+                                    <option value="都市生活">都市生活</option>
+                                    <option value="职场商战">职场商战</option>
+                                    <option value="青春校园">青春校园</option>
+                                    <option value="现代言情">现代言情</option>
+                                </optgroup>
+                                <optgroup label="悬疑烧脑">
+                                    <option value="悬疑推理">悬疑推理</option>
+                                    <option value="惊悚恐怖">惊悚恐怖</option>
+                                    <option value="冒险探险">冒险探险</option>
+                                    <option value="灵异神怪">灵异神怪</option>
+                                </optgroup>
+                                <optgroup label="科幻未来">
+                                    <option value="硬核科幻">硬核科幻</option>
+                                    <option value="未来世界">未来世界</option>
+                                    <option value="游戏竞技">游戏竞技</option>
+                                    <option value="机甲战争">机甲战争</option>
+                                </optgroup>
+                                <optgroup label="历史军事">
+                                    <option value="历史架空">历史架空</option>
+                                    <option value="军事战争">军事战争</option>
+                                    <option value="谍战特工">谍战特工</option>
+                                    <option value="历史穿越">历史穿越</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="step-actions">
+                            <button class="btn btn-primary" onclick="nextStep(1)">下一步</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 步骤2：故事背景 -->
+                    <div class="step-content" id="step2">
+                        <h5 class="card-title">第二步：确认故事背景和人物关系</h5>
+                        <div class="mb-3">
+                            <div class="background-content">
+                                <textarea class="form-control" id="backgroundText" rows="10" placeholder="正在生成内容，请稍候..."></textarea>
+                            </div>
+                            <div class="mt-3 d-flex justify-content-between">
+                                <div class="btn-group">
+                                    <button class="btn btn-primary" onclick="regenerateBackground()">重新生成</button>
+                                    <button class="btn btn-success" onclick="saveBackground()">保存内容</button>
+                                    <button class="btn btn-info" onclick="editBackground()">编辑内容</button>
+                                </div>
+                                <div class="btn-group">
+                                    <button class="btn btn-outline-primary" onclick="exportWord()">导出Word</button>
+                                    <button class="btn btn-outline-primary" onclick="exportText()">导出Text</button>
+                                    <button class="btn btn-outline-primary" onclick="copyContent()">复制内容</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="step-actions">
+                            <button class="btn btn-secondary" onclick="prevStep(2)">上一步</button>
+                            <button class="btn btn-primary" onclick="nextStep(2)">下一步</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 步骤3：生成大纲 -->
+                    <div class="step-content" id="step3">
+                        <h5 class="card-title">第三步：生成小说大纲</h5>
+                        <div class="generation-progress">
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar"></div>
+                            </div>
+                            <p class="loading-text">正在生成大纲内容，预计需要 3-5 分钟...</p>
+                        </div>
+                        <div class="outline-content">
+                            <textarea class="form-control" id="outlineText" rows="10"></textarea>
+                        </div>
+                        <div class="mt-3">
+                            <h6>大纲调整</h6>
+                            <div class="btn-group">
+                                <button class="btn btn-outline-primary" onclick="adjustOutline('情节')">调整情节发展</button>
+                                <button class="btn btn-outline-primary" onclick="adjustOutline('转折')">增加故事转折</button>
+                                <button class="btn btn-outline-primary" onclick="adjustOutline('结局')">优化结局设计</button>
+                            </div>
+                        </div>
+                        <div class="step-actions mt-3">
+                            <button class="btn btn-secondary" onclick="prevStep(3)">上一步</button>
+                            <button class="btn btn-primary" onclick="regenerateOutline()">重新生成</button>
+                            <button class="btn btn-success" onclick="nextStep(3)">确认并继续</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 步骤4：章节生成 -->
+                    <div class="step-content" id="step4">
+                        <h5 class="card-title">第四步：生成章节内容</h5>
+                        <div class="chapter-tree mb-3" id="chapterTree">
+                            <!-- 章节列表将在这里动态生成 -->
+                        </div>
+                        <div class="btn-group w-100 mb-3">
+                            <button class="btn btn-outline-primary" onclick="addChapter()">添加章</button>
+                            <button class="btn btn-outline-primary" onclick="addSection()">添加节</button>
+                            <button class="btn btn-outline-danger" onclick="deleteItem()">删除</button>
+                        </div>
+                        <div class="content-area-wrapper">
+                            <textarea class="content-area" id="chapterContent" placeholder="选择章节后点击生成按钮开始生成内容..."></textarea>
+                            <div class="generation-progress" style="display: none;">
+                                <div class="progress">
+                                    <div class="progress-bar"></div>
+                                </div>
+                                <p class="text-center text-muted loading-text">正在生成内容，请稍候...</p>
+                            </div>
+                        </div>
+                        <div class="btn-group w-100 mt-3">
+                            <button class="btn btn-primary" onclick="generateContent()">生成内容</button>
+                            <button class="btn btn-success" onclick="saveContent()">保存内容</button>
+                            <button class="btn btn-warning" onclick="regenerateContent()">重新生成</button>
+                        </div>
+                        <div class="export-tools mt-3">
+                            <button class="btn btn-outline-primary" onclick="exportWord()">导出Word</button>
+                            <button class="btn btn-outline-primary" onclick="exportText()">导出Text</button>
+                            <button class="btn btn-outline-secondary" onclick="copyContent()">复制内容</button>
+                        </div>
+                        <div class="step-actions mt-3">
+                            <button class="btn btn-secondary" onclick="prevStep(4)">上一步</button>
+                            <button class="btn btn-primary" onclick="nextStep(4)">下一步</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 步骤5：内容完善 -->
+                    <div class="step-content" id="step5">
+                        <h5 class="card-title">第五步：导出和完善</h5>
+                        <div class="export-options">
+                            <button class="btn btn-outline-primary" onclick="exportWord()">导出 Word</button>
+                            <button class="btn btn-outline-primary" onclick="exportText()">导出 Text</button>
+                            <button class="btn btn-outline-primary" onclick="copyContent()">复制内容</button>
+                        </div>
+                        <div class="step-actions">
+                            <button class="btn btn-secondary" onclick="prevStep(5)">返回编辑</button>
+                            <button class="btn btn-primary" onclick="startNew()">开始新的创作</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/docx@7.8.2/build/index.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // 添加授权码验证系统
+        const validAuthCodes = {
+            // 目前仅有的授权码
+            'AUTH0011-2025': { user: '授权用户', activated: null }
+        };
+
+        function verifyAuthCode() {
+            console.log('验证按钮被点击');
+                const authCode = document.getElementById('authCode').value.trim();
+            console.log('输入的授权码:', authCode);
+                
+                if (!authCode) {
+                    alert('请输入授权码');
+                    return;
+                }
+
+            const authInfo = validAuthCodes[authCode];
+            console.log('授权信息:', authInfo);
+            
+            if (!authInfo) {
+                alert('无效的授权码');
+                return;
+            }
+
+            // 检查是否已激活
+            if (authInfo.activated) {
+                alert('此授权码已被使用');
+                return;
+            }
+
+            // 激活授权码
+            authInfo.activated = new Date().toISOString();
+            
+            // 隐藏验证界面，显示主内容
+            document.getElementById('authPanel').style.display = 'none';
+                    document.getElementById('mainContent').style.display = 'block';
+                    
+            // 保存授权状态到localStorage
+            localStorage.setItem('authCode', authCode);
+            localStorage.setItem('authActivated', authInfo.activated);
+            
+            alert('验证成功！');
+        }
+
+        // 页面加载时检查授权状态和绑定事件
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('页面加载完成');
+            
+            // 绑定验证按钮点击事件
+            const verifyButton = document.getElementById('verifyAuth');
+            if (verifyButton) {
+                verifyButton.addEventListener('click', verifyAuthCode);
+                console.log('验证按钮事件已绑定');
+                } else {
+                console.error('找不到验证按钮元素');
+            }
+            
+            // 检查已保存的授权状态
+            const savedAuthCode = localStorage.getItem('authCode');
+            const savedAuthActivated = localStorage.getItem('authActivated');
+            console.log('已保存的授权状态:', { savedAuthCode, savedAuthActivated });
+            
+            if (savedAuthCode && savedAuthActivated) {
+                const authInfo = validAuthCodes[savedAuthCode];
+                if (authInfo && authInfo.activated === savedAuthActivated) {
+                    // 已授权，直接显示主内容
+                    document.getElementById('authPanel').style.display = 'none';
+                        document.getElementById('mainContent').style.display = 'block';
+                    console.log('已恢复授权状态');
+                    } else {
+                    // 授权信息无效，清除存储
+                    localStorage.removeItem('authCode');
+                    localStorage.removeItem('authActivated');
+                    console.log('授权信息无效，已清除');
+                }
+            }
+            
+            // 加载API Key
+            loadApiKey();
+        });
+        
+        let currentProgress = 0;
+        let progressInterval;
+        let originalOutline = '';
+        let isOutlineModified = false;
+        let currentChapter = 0;
+        let isGeneratingOutline = false;
+        let outlineStages = ['整体规划', '详细大纲'];
+        let currentStage = 0;
+        let currentStep = 1;
+        let savedChapters = {};
+        let backgroundContent = '';
+        let outlineContent = '';
+
+        function saveApiKey(apiKey) {
+            localStorage.setItem('moonshotApiKey', apiKey);
+        }
+
+        function loadApiKey() {
+            const savedApiKey = localStorage.getItem('moonshotApiKey');
+            if (savedApiKey) {
+                document.getElementById('apiKey').value = savedApiKey;
+                document.getElementById('apiKey').disabled = true;
+                document.getElementById('confirmApiKey').disabled = true;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadApiKey);
+
+        function updateProgress(progress) {
+            const progressBar = document.querySelector('.progress-bar');
+            const progressDiv = document.querySelector('.progress');
+            progressDiv.style.display = 'flex';
+            progressBar.style.width = `${progress}%`;
+            if (progress >= 100) {
+                setTimeout(() => {
+                    progressDiv.style.display = 'none';
+                }, 1000);
+            }
+        }
+
+        document.getElementById('confirmApiKey').addEventListener('click', async function() {
+            const apiKeyInput = document.getElementById('apiKey');
+            if (!apiKeyInput) {
+                alert('页面元素加载失败，请刷新重试！');
+                return;
+            }
+
+            const apiKey = apiKeyInput.value;
+            if (!apiKey) {
+                alert('请输入 API Key');
+                return;
+            }
+
+            try {
+                this.disabled = true;
+                this.textContent = '验证中...';
+                
+                const testMessages = [{
+                    role: "user",
+                    content: "你好"
+                }];
+                
+                await callMoonshotAPI(testMessages, apiKey);
+                saveApiKey(apiKey);
+                alert('API Key 验证成功！');
+                
+            } catch (error) {
+                alert('API Key 验证失败: ' + error.message);
+                this.disabled = false;
+            } finally {
+                this.textContent = '确认';
+            }
+        });
+
+        // 统一的 API 调用
+        async function callMoonshotAPI(messages, apiKey) {
+            if (!apiKey) {
+                throw new Error('请先设置 API Key');
+            }
+
+            try {
+                const requestBody = {
+                    model: "moonshot-v1-8k",
+                    messages: messages,
+                    temperature: 0.7,
+                    max_tokens: 3000
+                };
+
+                console.log('API Request:', JSON.stringify(requestBody, null, 2));
+
+                const response = await fetch('https://api.moonshot.cn/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        throw new Error('API Key 无效或未授权');
+                    } else if (response.status === 429) {
+                        throw new Error('请求过于频繁，请稍后再试');
+                    } else {
+                        throw new Error(`API 请求失败 (${response.status})`);
+                    }
+                }
+
+                const data = await response.json();
+                console.log('API Response:', data);
+
+                if (!data.choices?.[0]?.message?.content) {
+                    throw new Error('API 返回数据格式错误');
+                }
+
+                return data.choices[0].message.content;
+            } catch (error) {
+                console.error('API Error:', error);
+                throw error;
+            }
+        }
+
+        document.getElementById('contentArea').addEventListener('input', function() {
+            if (document.getElementById('outlineMode').checked) {
+                isOutlineModified = true;
+                document.getElementById('saveOutline').disabled = false;
+            }
+        });
+
+        document.getElementById('saveOutline').addEventListener('click', function() {
+            if (isOutlineModified) {
+                originalOutline = document.getElementById('contentArea').value;
+                isOutlineModified = false;
+                this.disabled = true;
+                alert('大纲修改已保存！');
+            }
+        });
+
+        document.getElementById('resetOutline').addEventListener('click', function() {
+            if (confirm('确定要放弃当前修改吗？')) {
+                document.getElementById('contentArea').value = originalOutline;
+                isOutlineModified = false;
+                document.getElementById('saveOutline').disabled = true;
+            }
+        });
+
+        document.getElementById('contentMode').addEventListener('change', function() {
+            if (this.checked) {
+                document.getElementById('generateChapter').style.display = 'block';
+                document.getElementById('saveOutline').style.display = 'none';
+                document.getElementById('resetOutline').style.display = 'none';
+                document.querySelector('.chapter-select').style.display = 'block';
+                
+                // 解析大纲中的章节
+                const outline = originalOutline;
+                const chapters = outline.match(/第[一二三四五六七八九十]+章[：:].+/g) || [];
+                
+                const chapterSelect = document.getElementById('chapterSelect');
+                chapterSelect.innerHTML = '<option value="" disabled selected>请选择要生成的章节</option>';
+                
+                chapters.forEach((chapter, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = chapter;
+                    chapterSelect.appendChild(option);
+                });
+            }
+        });
+
+        document.getElementById('outlineMode').addEventListener('change', function() {
+            if (this.checked) {
+                document.getElementById('generateChapter').style.display = 'none';
+                document.getElementById('saveOutline').style.display = 'block';
+                document.getElementById('resetOutline').style.display = 'block';
+                document.querySelector('.chapter-select').style.display = 'none';
+                document.getElementById('contentArea').value = originalOutline;
+            }
+        });
+
+        document.getElementById('continueGenerate').addEventListener('click', async function() {
+            this.disabled = true;
+            const apiKey = document.getElementById('apiKey').value;
+            const title = document.getElementById('title').value;
+            const novelType = document.getElementById('novelType').value;
+            const currentContent = document.getElementById('contentArea').value;
+            
+            try {
+                if (isGeneratingOutline) {
+                    if (currentStage === outlineStages.length) {
+                        // 大纲生成完成后的引导
+                        const outlineGuidance = document.createElement('div');
+                        outlineGuidance.className = 'alert alert-success mt-3';
+                        outlineGuidance.innerHTML = `
+                            <h5>✨ 详细大纲已生成完成！</h5>
+                            <p>现在您可以：</p>
+                            <ol>
+                                <li>切换到"章节内容模式"开始生成具体章节</li>
+                                <li>或继续修改大纲直到满意为止</li>
+                            </ol>
+                            <p>建议：先仔细阅读大纲，确保整体故事架构符合预期，再开始生成具体章节内容。</p>
+                        `;
+                        document.getElementById('contentArea').parentNode.insertBefore(outlineGuidance, document.getElementById('contentArea').nextSibling);
+                        
+                        // 自动显示切换模式的提示
+                        document.querySelector('.mode-switch').style.animation = 'highlight 2s infinite';
+                        setTimeout(() => document.querySelector('.mode-switch').style.animation = '', 6000);
+                        
+                        this.style.display = 'none';
+                        document.getElementById('generateChapter').style.display = 'block';
+                        return;
+                    }
+
+                    // 定义不同阶段的提示语
+                    const prompts = {
+                        0: `请为题为《${title}》的${novelType}小说规划整体故事架构和发展脉络，包括：\n1. 故事主线梗概\n2. 重要转折点\n3. 故事高潮和结局\n请确保故事结构完整，情节发展合理。`,
+                        1: `请基于以下整体规划，为《${title}》详细展开每个章节的具体内容：\n\n${currentContent}\n\n要求：\n1. 为每个重要情节规划具体章节\n2. 简述每章主要内容\n3. 确保章节之间衔接自然\n4. 保持故事节奏的张弛有度`
+                    };
+
+                    const response = await callMoonshotAPI(apiKey, {
+                        messages: [
+                            {
+                                role: "system",
+                                content: `你是一个专业的${novelType}小说大纲策划师。${
+                                    currentStage === 1 ? '现在需要基于已有的整体规划，详细展开每个章节的具体内容。' : 
+                                    '首先需要规划整体故事架构和发展脉络。'
+                                }`
+                            },
+                            {
+                                role: "user",
+                                content: prompts[currentStage]
+                            }
+                        ]
+                    });
+
+                    document.getElementById('contentArea').value = currentStage === 1 ? 
+                        currentContent + '\n\n详细章节大纲：\n' + response.choices[0].message.content :
+                        response.choices[0].message.content;
+                    
+                    currentStage++;
+                    if (currentStage < outlineStages.length) {
+                        this.textContent = '生成详细大纲';
+                        this.disabled = false;
+                    } else {
+                        this.textContent = '完成大纲';
+                        this.disabled = false;
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('contentArea').value = '生成失败，请稍后重试';
+                this.disabled = false;
+            }
+        });
+
+        document.getElementById('generateChapter').addEventListener('click', async function() {
+            // ... existing validation code ...
+            
+            try {
+                isGeneratingOutline = false;
+                currentChapter = parseInt(chapterSelect.value);
+                const response = await callMoonshotAPI(apiKey, {
+                    messages: [
+                        {
+                            role: "system",
+                            content: `你是一个专业的小说写作助手。现在开始生成第${currentChapter + 1}章的内容。`
+                        },
+                        {
+                            role: "user",
+                            content: `基于以下大纲，生成第${currentChapter + 1}章的具体内容：\n\n${originalOutline}\n\n要求：\n1. 详细描写场景和人物\n2. 字数控制在4000-6000字之间\n3. 符合${novelType}小说的特点\n4. 注重情节发展的合理性\n5. 保持人物性格的一致性\n6. 适当运用环境描写和心理描写\n7. 与前文保持连贯\n8. 合理安排情节节奏`
+                        }
+                    ]
+                });
+
+                document.getElementById('contentArea').value = response.choices[0].message.content;
+                document.getElementById('continueGenerate').style.display = 'block';
+                document.getElementById('continueGenerate').disabled = false;
+                
+                clearInterval(progressInterval);
+                updateProgress(100);
+            } catch (error) {
+                // ... existing error handling ...
+            }
+        });
+
+        async function exportWord() {
+            if (Object.keys(savedChapters).length === 0) {
+                alert('没有可导出的内容！');
+                return;
+            }
+
+            const doc = new docx.Document({
+                sections: [{
+                    properties: {},
+                    children: [
+                        new docx.Paragraph({
+                            text: document.getElementById('title').value || '小说标题',
+                            heading: docx.HeadingLevel.HEADING_1
+                        })
+                    ]
+                }]
+            });
+
+            // 按章节顺序添加内容
+            chapters.forEach(chapter => {
+                // 添加章节标题
+                doc.addSection({
+                    children: [
+                        new docx.Paragraph({
+                            text: chapter.title,
+                            heading: docx.HeadingLevel.HEADING_2
+                        })
+                    ]
+                });
+
+                // 添加小节内容
+                chapter.sections.forEach(section => {
+                    if (savedChapters[section.id]) {
+                        doc.addSection({
+                            children: [
+                                new docx.Paragraph({
+                                    text: section.title,
+                                    heading: docx.HeadingLevel.HEADING_3
+                                }),
+                                new docx.Paragraph({
+                                    text: savedChapters[section.id]
+                                })
+                            ]
+                        });
+                    }
+                });
+            });
+
+            const blob = await docx.Packer.toBlob(doc);
+            saveAs(blob, `${document.getElementById('title').value || '小说'}.docx`);
+        }
+
+        function exportText() {
+            if (Object.keys(savedChapters).length === 0) {
+                alert('没有可导出的内容！');
+                return;
+            }
+
+            let content = document.getElementById('title').value + '\n\n';
+
+            // 按章节顺序添加内容
+            chapters.forEach(chapter => {
+                content += chapter.title + '\n\n';
+                chapter.sections.forEach(section => {
+                    if (savedChapters[section.id]) {
+                        content += section.title + '\n\n';
+                        content += savedChapters[section.id] + '\n\n';
+                    }
+                });
+            });
+
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            saveAs(blob, `${document.getElementById('title').value || '小说'}.txt`);
+        }
+
+        function copyContent() {
+            const content = document.getElementById('contentArea').value;
+            if (!content) {
+                alert('没有可复制的内容！');
+                return;
+            }
+
+            navigator.clipboard.writeText(content)
+                .then(() => alert('内容已复制到剪贴板！'))
+                .catch(err => alert('复制失败：' + err));
+        }
+
+        function selectSuggestion(button) {
+            document.getElementById('modificationInput').value = button.textContent;
+        }
+
+        async function applyModification() {
+            const suggestion = document.getElementById('modificationInput').value;
+            if (!suggestion) {
+                alert('请输入修改建议');
+                return;
+            }
+
+            const apiKey = document.getElementById('apiKey').value;
+            if (!apiKey) {
+                alert('请输入API Key');
+                return;
+            }
+
+            const currentContent = document.getElementById('contentArea').value;
+            if (!currentContent) {
+                alert('请先生成内容再进行修改');
+                return;
+            }
+
+            document.getElementById('contentArea').value = '正在根据建议修改内容，请稍候...';
+
+            try {
+                const response = await callMoonshotAPI(apiKey, {
+                    messages: [
+                        {
+                            role: "system",
+                            content: `你是一个专业的小说编辑，需要根据用户的建议对内容进行修改和优化。请保持原有内容的基本框架，在此基础上进行优化。`
+                        },
+                        {
+                            role: "user",
+                            content: `请根据以下建议修改内容：
+${suggestion}
+
+原内容：
+${currentContent}
+
+要求：
+1. 保持原有内容的基本框架和主要情节
+2. 根据修改建议进行优化和调整
+3. 确保修改后的内容更加吸引人
+4. 保持文风的一致性`
+                        }
+                    ]
+                });
+
+                document.getElementById('contentArea').value = response.choices[0].message.content;
+                isOutlineModified = true;
+                document.getElementById('saveOutline').disabled = false;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('contentArea').value = currentContent;
+                alert('修改失败，请稍后重试');
+            }
+        }
+
+        // 页面加载时检查授权和绑定事件
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('页面加载完成');
+            
+            // 检查已保存的授权码
+            const savedAuthCode = localStorage.getItem('novelGenAuthCode');
+            console.log('已保存的授权码:', savedAuthCode);
+            
+            if (savedAuthCode && validAuthCodes[savedAuthCode]) {
+                const activationDate = localStorage.getItem(`activation_${savedAuthCode}`);
+                if (activationDate) {
+                    const activated = new Date(activationDate);
+                    const expiry = new Date(activated);
+                    expiry.setFullYear(expiry.getFullYear() + 1);
+                    
+                    const now = new Date();
+                    if (now <= expiry) {
+                        document.getElementById('authCode').value = savedAuthCode;
+                        document.getElementById('mainContent').style.display = 'block';
+                        // 禁用授权码输入和验证按钮
+                        document.getElementById('authCode').disabled = true;
+                        document.getElementById('verifyAuth').disabled = true;
+                        console.log('已恢复保存的授权状态');
+                    } else {
+                        localStorage.removeItem(`activation_${savedAuthCode}`);
+                        localStorage.removeItem('novelGenAuthCode');
+                        localStorage.removeItem('novelGenUser');
+                        console.log('授权已过期，已清除保存的状态');
+                    }
+                }
+            }
+            
+            // 加载API Key
+            loadApiKey();
+        });
+
+        // 添加错误处理
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            console.error('Error: ' + msg + '\nURL: ' + url + '\nLine: ' + lineNo + '\nColumn: ' + columnNo + '\nError object: ' + JSON.stringify(error));
+            return false;
+        };
+
+        // 步骤控制函数
+        function updateStepIndicator(step) {
+            document.querySelectorAll('.step-item').forEach(item => {
+                const itemStep = parseInt(item.dataset.step);
+                item.classList.remove('active', 'completed');
+                if (itemStep === step) {
+                    item.classList.add('active');
+                } else if (itemStep < step) {
+                    item.classList.add('completed');
+                }
+            });
+        }
+
+        async function showStep(step) {
+            document.querySelectorAll('.step-content').forEach(content => {
+                if (content.id === `step${step}`) {
+                    content.style.display = 'block';
+                    content.style.opacity = '0';
+                    setTimeout(() => {
+                        content.style.opacity = '1';
+                    }, 10);
+                } else {
+                    content.style.display = 'none';
+                }
+            });
+        }
+
+        async function nextStep(currentStep) {
+            try {
+                // 验证当前步骤
+                switch (currentStep) {
+                    case 1:
+                        const title = document.getElementById('title').value.trim();
+                        const genre = document.getElementById('novelType').value;
+                        if (!title || !genre) {
+                            throw new Error('请填写小说标题和类型！');
+                        }
+                        
+                        // 验证 API Key
+                        const apiKey = localStorage.getItem('moonshotApiKey');
+                        if (!apiKey) {
+                            throw new Error('请先设置 API Key！');
+                        }
+                        break;
+                }
+                
+                // 更新步骤显示
+                document.querySelectorAll('.step-content').forEach(content => {
+                    content.style.display = 'none';
+                });
+                
+                document.getElementById(`step${currentStep + 1}`).style.display = 'block';
+                
+                // 更新进度指示器
+                document.querySelectorAll('.step-item').forEach((item, index) => {
+                    item.classList.remove('active');
+                    if (index === currentStep - 1) {
+                        item.classList.add('completed');
+                    } else if (index === currentStep) {
+                        item.classList.add('active');
+                    }
+                });
+
+                // 如果是进入第二步，自动开始生成背景
+                if (currentStep === 1) {
+                    await generateBackground();
+                }
+                
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        function prevStep(currentStep) {
+            showStep(currentStep - 1);
+        }
+
+        async function generateBackground() {
+            const title = document.getElementById('title').value.trim();
+            const genre = document.getElementById('novelType').value;
+            
+            if (!title || !genre) {
+                alert('请先填写小说标题和类型！');
+                return;
+            }
+
+            const apiKey = localStorage.getItem('moonshotApiKey');
+            if (!apiKey) {
+                alert('请先设置 API Key！');
+                return;
+            }
+
+            // 显示进度条
+            const progressContainer = document.querySelector('.generation-progress');
+            const progressBar = progressContainer.querySelector('.progress-bar');
+            const loadingText = progressContainer.querySelector('.loading-text');
+            
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '0%';
+            loadingText.textContent = '正在生成背景信息...';
+            
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 2;
+                if (progress <= 90) {
+                    progressBar.style.width = `${progress}%`;
+                }
+            }, 300);
+
+            try {
+                const messages = [
+                    {
+                        role: "system",
+                        content: `你是一个专业的${genre}小说写手，擅长创作引人入胜的故事背景。`
+                    },
+                    {
+                        role: "user",
+                        content: `请为${genre}小说《${title}》创作一个详细的背景设定。要求：\n1. 世界观要完整且独特\n2. 背景信息要丰富\n3. 要包含重要地点描写\n4. 要包含重要人物设定\n5. 要为后续情节发展埋下伏笔`
+                    }
+                ];
+
+                const content = await callMoonshotAPI(messages, apiKey);
+                document.getElementById('backgroundContent').value = content;
+                localStorage.setItem('background', content);
+                
+                // 完成进度
+                progressBar.style.width = '100%';
+                loadingText.textContent = '生成完成！';
+                
+            } catch (error) {
+                alert('生成背景失败: ' + error.message);
+                loadingText.textContent = '生成失败，请重试';
+            } finally {
+                clearInterval(progressInterval);
+                // 1秒后隐藏进度条
+                setTimeout(() => {
+                    progressContainer.style.display = 'none';
+                    progressBar.style.width = '0%';
+                }, 1000);
+            }
+        }
+
+        async function generateOutline() {
+            const title = document.getElementById('title').value;
+            const novelType = document.getElementById('novelType').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const background = document.getElementById('backgroundContent').value;
+            
+            // 显示进度条和加载状态
+            const progressDiv = document.querySelector('.generation-progress');
+            const progressBar = progressDiv.querySelector('.progress-bar');
+            progressDiv.style.display = 'block';
+            
+            // 启动进度条动画
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 1;
+                if (progress > 90) {
+                    clearInterval(progressInterval);
+                } else {
+                    progressBar.style.width = `${progress}%`;
+                }
+            }, 1000);
+            
+            document.getElementById('outlineContent').value = '正在生成故事大纲，请稍候...';
+            
+            try {
+                const response = await callMoonshotAPI(apiKey, {
+                    messages: [
+                        {
+                            role: "system",
+                            content: `你是一个专业的${novelType}小说大纲策划师。请基于已有的背景设定，创作详细的故事大纲。`
+                        },
+                        {
+                            role: "user",
+                            content: `基于以下背景设定，为《${title}》创作详细的故事大纲：\n\n${background}\n\n要求：\n1. 故事情节要符合${novelType}的特点和规律\n2. 人物性格鲜明，故事情节吸引人\n3. 按照序章+正文（12-15章）的结构来写\n4. 每个情节转折要符合逻辑，有因果关系\n5. 结尾要有意想不到的转折或深刻的寓意\n6. 列出3个重要的故事转折点，并说明这些转折点分别发生在第几章\n7. 故事结构按照"序章-发展-高潮-结局"四个阶段展开，每个阶段3-4章`
+                        }
+                    ],
+                    temperature: 0.8,
+                    max_tokens: 3000
+                });
+                
+                // 生成完成，设置进度条为100%
+                progressBar.style.width = '100%';
+                setTimeout(() => {
+                    progressDiv.style.display = 'none';
+                    progressBar.style.width = '0%';
+                }, 1000);
+                
+                document.getElementById('outlineContent').value = response.choices[0].message.content;
+            } catch (error) {
+                console.error('Error:', error);
+                progressDiv.style.display = 'none';
+                throw new Error('生成大纲失败：' + error.message);
+            } finally {
+                clearInterval(progressInterval);
+            }
+        }
+
+        function generateChapterOptions() {
+            const outline = document.getElementById('outlineContent').value;
+            const chapters = outline.match(/第[一二三四五六七八九十]+章[：:].+/g) || [];
+            
+            const chapterSelect = document.getElementById('chapterSelect');
+            chapterSelect.innerHTML = '<option value="" disabled selected>请选择章节</option>';
+            
+            chapters.forEach((chapter, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = chapter;
+                chapterSelect.appendChild(option);
+            });
+        }
+
+        async function generateChapter() {
+            const title = document.getElementById('title').value;
+            const novelType = document.getElementById('novelType').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const chapterSelect = document.getElementById('chapterSelect');
+            const selectedChapter = chapterSelect.options[chapterSelect.selectedIndex].text;
+            
+            if (!selectedChapter) {
+                alert('请选择要生成的章节');
+                return;
+            }
+            
+            document.getElementById('chapterContent').value = '正在生成章节内容，请稍候...';
+            
+            try {
+                const response = await callMoonshotAPI(apiKey, {
+                    messages: [
+                        {
+                            role: "system",
+                            content: `你是一个专业的${novelType}小说写作助手。请基于背景设定和大纲，创作精彩的章节内容。`
+                        },
+                        {
+                            role: "user",
+                            content: `请基于以下信息，创作《${title}》的${selectedChapter}：
+
+背景设定：
+${backgroundContent}
+
+故事大纲：
+${outlineContent}
+
+要求：
+1. 详细描写场景和人物
+2. 字数控制在4000-6000字之间
+3. 符合${novelType}小说的特点
+4. 注重情节发展的合理性
+5. 保持人物性格的一致性
+6. 适当运用环境描写和心理描写
+7. 与前文保持连贯
+8. 合理安排情节节奏`
+                        }
+                    ]
+                });
+                
+                document.getElementById('chapterContent').value = response.choices[0].message.content;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('chapterContent').value = '生成失败，请稍后重试';
+            }
+        }
+
+        function saveChapter() {
+            const chapterSelect = document.getElementById('chapterSelect');
+            const selectedChapter = chapterSelect.options[chapterSelect.selectedIndex].text;
+            const content = document.getElementById('chapterContent').value;
+            
+            savedChapters[selectedChapter] = content;
+            alert('章节内容已保存！');
+        }
+
+        // 人工干涉函数
+        async function applyModification(stage, content, modification) {
+            const title = document.getElementById('title').value;
+            const novelType = document.getElementById('novelType').value;
+            const apiKey = document.getElementById('apiKey').value;
+            
+            try {
+                const response = await callMoonshotAPI(apiKey, {
+                    messages: [
+                        {
+                            role: "system",
+                            content: `你是一个专业的${novelType}小说${stage}优化专家。请根据用户的建议修改内容。`
+                        },
+                        {
+                            role: "user",
+                            content: `请根据以下建议修改《${title}》的${stage}：
+
+修改建议：${modification}
+
+原内容：
+${content}
+
+要求：
+1. 保持原有内容的基本框架
+2. 根据修改建议进行优化
+3. 确保修改后的内容更加吸引人
+4. 保持文风的一致性`
+                        }
+                    ]
+                });
+                
+                return response.choices[0].message.content;
+            } catch (error) {
+                console.error('Error:', error);
+                throw new Error('修改失败，请稍后重试');
+            }
+        }
+
+        async function applyBackgroundModification() {
+            const modification = document.getElementById('backgroundModification').value;
+            if (!modification) {
+                alert('请输入修改建议');
+                return;
+            }
+            
+            const progressContainer = document.getElementById('backgroundProgress');
+            const content = document.getElementById('backgroundContent').value;
+            const modifyButton = event.target;
+            
+            try {
+                // 显示进度条和禁用按钮
+                progressContainer.style.display = 'block';
+                modifyButton.disabled = true;
+                modifyButton.innerHTML = '修改中...';
+                
+                const result = await applyModification('背景设定', content, modification);
+                document.getElementById('backgroundContent').value = result;
+                
+                // 修改成功的反馈
+                modifyButton.innerHTML = '修改成功';
+                modifyButton.classList.remove('btn-primary');
+                modifyButton.classList.add('btn-success');
+                setTimeout(() => {
+                    modifyButton.innerHTML = '应用修改';
+                    modifyButton.classList.remove('btn-success');
+                    modifyButton.classList.add('btn-primary');
+                }, 2000);
+            } catch (error) {
+                alert(error.message);
+                modifyButton.innerHTML = '修改失败';
+                modifyButton.classList.remove('btn-primary');
+                modifyButton.classList.add('btn-danger');
+                setTimeout(() => {
+                    modifyButton.innerHTML = '应用修改';
+                    modifyButton.classList.remove('btn-danger');
+                    modifyButton.classList.add('btn-primary');
+                }, 2000);
+            } finally {
+                // 隐藏进度条和启用按钮
+                setTimeout(() => {
+                    progressContainer.style.display = 'none';
+                    modifyButton.disabled = false;
+                }, 2000);
+            }
+        }
+
+        async function applyOutlineModification() {
+            const modification = document.getElementById('outlineModification').value;
+            if (!modification) {
+                alert('请输入修改建议');
+                return;
+            }
+            
+            const content = document.getElementById('outlineContent').value;
+            try {
+                const result = await applyModification('故事大纲', content, modification);
+                document.getElementById('outlineContent').value = result;
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        async function applyChapterModification() {
+            const modification = document.getElementById('chapterModification').value;
+            if (!modification) {
+                alert('请输入修改建议');
+                return;
+            }
+            
+            const content = document.getElementById('chapterContent').value;
+            try {
+                const result = await applyModification('章节内容', content, modification);
+                document.getElementById('chapterContent').value = result;
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        // 重新生成函数
+        async function regenerateBackground() {
+            if (confirm('确定要重新生成背景吗？当前内容将被覆盖。')) {
+                await generateBackground();
+            }
+        }
+
+        async function regenerateOutline() {
+            if (confirm('确定要重新生成大纲吗？当前内容将被覆盖。')) {
+                await generateOutline();
+            }
+        }
+
+        async function regenerateChapter() {
+            if (confirm('确定要重新生成当前章节吗？当前内容将被覆盖。')) {
+                await generateChapter();
+            }
+        }
+
+        // 建议标签选择函数
+        function selectBackgroundSuggestion(button) {
+            document.getElementById('backgroundModification').value = button.textContent;
+        }
+
+        function selectOutlineSuggestion(button) {
+            document.getElementById('outlineModification').value = button.textContent;
+        }
+
+        function selectChapterSuggestion(button) {
+            document.getElementById('chapterModification').value = button.textContent;
+        }
+
+        // 开始新创作
+        function startNew() {
+            if (confirm('确定要开始新的创作吗？当前所有内容将被清空。')) {
+                document.getElementById('title').value = '';
+                document.getElementById('novelType').value = '';
+                document.getElementById('backgroundContent').value = '';
+                document.getElementById('outlineContent').value = '';
+                document.getElementById('chapterContent').value = '';
+                savedChapters = {};
+                backgroundContent = '';
+                outlineContent = '';
+                showStep(1);
+            }
+        }
+
+        // 绑定章节选择事件
+        document.getElementById('chapterSelect').addEventListener('change', function() {
+            const selectedChapter = this.options[this.selectedIndex].text;
+            if (savedChapters[selectedChapter]) {
+                document.getElementById('chapterContent').value = savedChapters[selectedChapter];
+            } else {
+                document.getElementById('chapterContent').value = '请点击"生成章节"按钮生成内容';
+            }
+        });
+
+        async function showStep(step) {
+            document.querySelectorAll('.step-content').forEach(content => {
+                if (content.id === `step${step}`) {
+                    content.style.display = 'block';
+                    content.style.opacity = '0';
+                    setTimeout(() => {
+                        content.style.opacity = '1';
+                    }, 10);
+                } else {
+                    content.style.display = 'none';
+                }
+            });
+        }
+
+        function updateStepIndicator() {
+            const indicators = document.querySelectorAll('.step-indicator');
+            indicators.forEach((indicator, index) => {
+                if (index < currentStep) {
+                    indicator.classList.add('completed');
+                } else if (index === currentStep) {
+                    indicator.classList.add('active');
+                } else {
+                    indicator.classList.remove('completed', 'active');
+                }
+            });
+        }
+
+        // 添加新的章节管理功能
+        let chapters = [];
+        let selectedItem = null;
+
+        function addChapter() {
+            if (chapters.length >= 30) {
+                alert('已达到最大章节数限制（30章）！');
+                return;
+            }
+            
+            const chapterName = prompt('请输入章的标题：');
+            if (chapterName) {
+                const chapter = {
+                    id: Date.now(),
+                    type: 'chapter',
+                    title: `第${chapters.length + 1}章 ${chapterName}`,
+                    sections: []
+                };
+                chapters.push(chapter);
+                updateChapterTree();
+            }
+        }
+
+        function addSection() {
+            if (!selectedItem || selectedItem.type !== 'chapter') {
+                alert('请先选择一个章！');
+                return;
+            }
+
+            const chapter = chapters.find(c => c.id === selectedItem.id);
+            if (!chapter) return;
+
+            if (chapter.sections.length >= 5) {
+                alert('每章最多只能添加5个小节！');
+                return;
+            }
+
+            const sectionName = prompt('请输入节的标题：');
+            if (sectionName) {
+                chapter.sections.push({
+                    id: Date.now(),
+                    type: 'section',
+                    title: `第${chapter.sections.length + 1}节 ${sectionName}`,
+                    content: ''
+                });
+                updateChapterTree();
+            }
+        }
+
+        function deleteItem() {
+            if (!selectedItem) {
+                alert('请先选择要删除的项目！');
+                return;
+            }
+
+            if (confirm('确定要删除吗？')) {
+                if (selectedItem.type === 'chapter') {
+                    chapters = chapters.filter(c => c.id !== selectedItem.id);
+                } else {
+                    const chapter = chapters.find(c => c.sections.some(s => s.id === selectedItem.id));
+                    if (chapter) {
+                        chapter.sections = chapter.sections.filter(s => s.id !== selectedItem.id);
+                    }
+                }
+                selectedItem = null;
+                updateChapterTree();
+            }
+        }
+
+        function updateChapterTree() {
+            const tree = document.getElementById('chapterTree');
+            tree.innerHTML = '';
+            
+            chapters.forEach(chapter => {
+                const chapterDiv = document.createElement('div');
+                chapterDiv.className = `chapter-item ${selectedItem && selectedItem.id === chapter.id ? 'active' : ''}`;
+                chapterDiv.onclick = () => selectItem(chapter);
+                chapterDiv.innerHTML = `<i class="bi bi-book"></i> ${chapter.title}`;
+                tree.appendChild(chapterDiv);
+                
+                chapter.sections.forEach(section => {
+                    const sectionDiv = document.createElement('div');
+                    sectionDiv.className = `section-item ms-4 ${selectedItem && selectedItem.id === section.id ? 'active' : ''}`;
+                    sectionDiv.onclick = () => selectItem(section);
+                    sectionDiv.innerHTML = `<i class="bi bi-file-text"></i> ${section.title}`;
+                    if (savedChapters[section.id]) {
+                        sectionDiv.innerHTML += ' <span class="badge bg-success">已保存</span>';
+                    }
+                    tree.appendChild(sectionDiv);
+                });
+            });
+            
+            // 自动保存章节结构
+            saveToLocalStorage();
+        }
+
+        function selectItem(item) {
+            selectedItem = item;
+            updateChapterTree();
+            // 清空内容区
+            document.getElementById('chapterContent').value = '';
+        }
+
+        // 添加生成内容的功能
+        async function generateContent() {
+            if (!selectedItem || selectedItem.type !== 'section') {
+                alert('请先选择一个小节！');
+                return;
+            }
+
+            const chapter = chapters.find(c => c.sections.some(s => s.id === selectedItem.id));
+            if (!chapter) return;
+
+            const apiKey = document.getElementById('apiKey').value;
+            if (!apiKey) {
+                alert('请先输入并确认 API Key');
+                return;
+            }
+
+            const progressBar = document.querySelector('.generation-progress');
+            progressBar.style.display = 'block';
+            const progressBarInner = progressBar.querySelector('.progress-bar');
+            let progress = 0;
+
+            // 启动进度条动画
+            const progressInterval = setInterval(() => {
+                progress += 1;
+                if (progress <= 90) {
+                    progressBarInner.style.width = `${progress}%`;
+                }
+            }, 500);
+
+            try {
+                const title = document.getElementById('title').value;
+                const genre = document.getElementById('novelType').value;
+                const background = localStorage.getItem('background') || '';
+                const outline = localStorage.getItem('outline') || '';
+
+                const messages = [
+                    {
+                        role: "system",
+                        content: `你是一个专业的${genre}小说写手，专注于创作精彩的章节内容。`
+                    },
+                    {
+                        role: "user",
+                        content: `请为${genre}小说《${title}》的${chapter.title}生成第${chapter.sections.findIndex(s => s.id === selectedItem.id) + 1}节的详细内容。
+
+背景信息：
+${background}
+
+章节大纲：
+${outline}
+
+要求：
+1. 字数在4000-6000字之间
+2. 场景描写要具体细腻，调动多种感官
+3. 人物对话要体现性格特点和情感变化
+4. 注重环境氛围的营造
+5. 细节描写要为情节服务
+6. 保持人物性格的一致性和成长性
+7. 注意伏笔的埋设和呼应
+8. 确保与其他小节的情节连贯
+9. 运用恰当的写作手法
+10. 节奏把控要合理，重要场景要细致
+11. 通过细节体现人物性格
+12. 适当加入象征性的意象
+13. 情节要更加跌宕起伏
+14. 增加更多的冲突和矛盾
+
+格式要求：
+1. 分段要合理，段落长度适中
+2. 重要对话和场景要单独成段
+3. 适当使用空行区分场景转换`
+                    }
+                ];
+
+                const content = await callMoonshotAPI(messages, apiKey);
+                document.getElementById('chapterContent').value = content;
+                progressBarInner.style.width = '100%';
+
+                // 自动保存生成的内容
+                savedChapters[selectedItem.id] = content;
+                localStorage.setItem('savedChapters', JSON.stringify(savedChapters));
+
+            } catch (error) {
+                alert('生成失败：' + error.message);
+            } finally {
+                clearInterval(progressInterval);
+                setTimeout(() => {
+                    progressBar.style.display = 'none';
+                    progressBarInner.style.width = '0%';
+                }, 1000);
+            }
+        }
+
+        function showLoading() {
+            document.querySelector('.generation-progress').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.querySelector('.generation-progress').style.display = 'none';
+        }
+
+        function saveContent() {
+            if (!selectedItem || !document.getElementById('chapterContent').value) {
+                alert('请先生成内容！');
+                return;
+            }
+            
+            const content = document.getElementById('chapterContent').value;
+            savedChapters[selectedItem.id] = content;
+            localStorage.setItem('savedChapters', JSON.stringify(savedChapters));
+            alert('内容已保存！');
+        }
+
+        function regenerateContent() {
+            if (!selectedItem) {
+                alert('请先选择一个小节！');
+                return;
+            }
+            generateContent();
+        }
+
+        // 添加自动保存和恢复功能
+        function saveToLocalStorage() {
+            localStorage.setItem('chapters', JSON.stringify(chapters));
+            localStorage.setItem('savedChapters', JSON.stringify(savedChapters));
+        }
+
+        function loadFromLocalStorage() {
+            const savedChaptersData = localStorage.getItem('savedChapters');
+            const chaptersData = localStorage.getItem('chapters');
+            
+            if (savedChaptersData) {
+                savedChapters = JSON.parse(savedChaptersData);
+            }
+            
+            if (chaptersData) {
+                chapters = JSON.parse(chaptersData);
+                updateChapterTree();
+            }
+        }
+
+        // 页面加载时恢复数据
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFromLocalStorage();
+            // ... existing initialization code ...
+        });
+
+        // 页面加载时检查授权和绑定事件
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查是否已经授权
+            const savedAuthCode = localStorage.getItem('authCode');
+            if (savedAuthCode) {
+                const authInfo = validAuthCodes[savedAuthCode];
+                if (authInfo) {
+                    document.getElementById('authPanel').style.display = 'none';
+                    document.getElementById('mainContent').style.display = 'block';
+                }
+            }
+            
+            // 加载API Key
+            loadApiKey();
+        });
+
+        // 添加错误处理
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            console.error('Error: ' + msg + '\nURL: ' + url + '\nLine: ' + lineNo + '\nColumn: ' + columnNo + '\nError object: ' + JSON.stringify(error));
+            return false;
+        };
+
+        // 步骤控制函数
+        function updateStepIndicator(step) {
+            document.querySelectorAll('.step-item').forEach(item => {
+                const itemStep = parseInt(item.dataset.step);
+                if (itemStep === step) {
+                    item.classList.add('active');
+                    } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+    </script>
+</body>
+</html> 

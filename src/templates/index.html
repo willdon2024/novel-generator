@@ -856,8 +856,8 @@
             // 检查是否已激活
             if (authInfo.activated) {
                 // 如果已激活，检查是否是当前设备激活的
-                const savedAuthCode = localStorage.getItem('novelGenAuthCode');
-                const savedActivation = localStorage.getItem(`activation_${authCode}`);
+                const savedAuthCode = localStorage.getItem('authCode');
+                const savedActivation = localStorage.getItem('authActivated');
                 
                 if (savedAuthCode === authCode && savedActivation) {
                     // 如果是当前设备激活的，允许继续使用
@@ -874,8 +874,8 @@
             authInfo.activated = new Date().toISOString();
             
             // 保存授权状态到localStorage
-            localStorage.setItem('novelGenAuthCode', authCode);
-            localStorage.setItem(`activation_${authCode}`, authInfo.activated);
+            localStorage.setItem('authCode', authCode);
+            localStorage.setItem('authActivated', authInfo.activated);
             
             // 隐藏验证界面，显示主内容
             document.getElementById('authPanel').style.display = 'none';
@@ -893,13 +893,13 @@
             console.log('页面加载完成');
             
             // 检查已保存的授权码
-            const savedAuthCode = localStorage.getItem('novelGenAuthCode');
+            const savedAuthCode = localStorage.getItem('authCode');
+            const savedActivation = localStorage.getItem('authActivated');
             console.log('已保存的授权码:', savedAuthCode);
             
             if (savedAuthCode && validAuthCodes[savedAuthCode]) {
-                const activationDate = localStorage.getItem(`activation_${savedAuthCode}`);
-                if (activationDate) {
-                    const activated = new Date(activationDate);
+                if (savedActivation) {
+                    const activated = new Date(savedActivation);
                     const expiry = new Date(activated);
                     expiry.setFullYear(expiry.getFullYear() + 1); // 设置一年有效期
                     
@@ -915,8 +915,8 @@
                         console.log('已恢复保存的授权状态');
                     } else {
                         // 如果授权码已过期，清除所有相关存储
-                        localStorage.removeItem(`activation_${savedAuthCode}`);
-                        localStorage.removeItem('novelGenAuthCode');
+                        localStorage.removeItem('authCode');
+                        localStorage.removeItem('authActivated');
                         localStorage.removeItem('moonshotApiKey');
                         console.log('授权已过期，已清除保存的状态');
                     }
