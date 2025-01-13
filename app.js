@@ -124,7 +124,7 @@ class AppState {
         this.authExpiry = expiry;
         this.isAuthorized = true;
         
-        // 自动填充并禁用输入框
+        // 自动填充并禁用输入框和按钮
         const authInput = document.getElementById('authCode');
         const verifyButton = document.getElementById('verifyAuth');
         if (authInput && verifyButton) {
@@ -213,36 +213,35 @@ const progressManager = appState.progressManager;
 document.addEventListener('DOMContentLoaded', function() {
     console.log('页面加载完成');
     
-    // 首先检查授权状态
+    // 检查授权状态
     if (appState.checkAuthStatus()) {
         // 显示剩余天数
         const remainingDays = Math.ceil((appState.authExpiry - new Date()) / (1000 * 60 * 60 * 24));
         console.log(`授权码有效，剩余${remainingDays}天`);
         
-        // 显示主界面
-        document.getElementById('authPanel').style.display = 'none';
-        document.getElementById('mainContent').style.display = 'block';
-        
         // 恢复之前的状态
-        setTimeout(() => {
-            restoreState();
-        }, 100);
-    } else {
-        // 未授权或授权过期，显示授权界面
-        document.getElementById('authPanel').style.display = 'block';
-        document.getElementById('mainContent').style.display = 'none';
+        restoreState();
     }
     
     // 绑定验证按钮点击事件
     const verifyButton = document.getElementById('verifyAuth');
     if (verifyButton) {
         verifyButton.addEventListener('click', function() {
-            const authCode = document.getElementById('authCode').value.trim();
+            const authInput = document.getElementById('authCode');
+            const authCode = authInput.value.trim();
             const result = appState.verifyAuthCode(authCode);
             
             if (result.success) {
+                // 禁用输入框和按钮
+                authInput.disabled = true;
+                verifyButton.disabled = true;
+                
+                // 显示主界面
                 document.getElementById('authPanel').style.display = 'none';
                 document.getElementById('mainContent').style.display = 'block';
+                
+                // 恢复之前的状态
+                restoreState();
             }
             
             alert(result.message);
@@ -271,7 +270,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // 重新绑定第三步的重新生成按钮
+    // 绑定第三步的重新生成按钮
     const outlineRegenerateBtn = document.querySelector('#step3 .regenerate-btn');
     if (outlineRegenerateBtn) {
         outlineRegenerateBtn.addEventListener('click', function() {
@@ -280,7 +279,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // 重新绑定第三步的保存按钮
+    // 绑定第三步的保存按钮
     const outlineSaveBtn = document.querySelector('#step3 .save-btn');
     if (outlineSaveBtn) {
         outlineSaveBtn.addEventListener('click', function() {
@@ -312,11 +311,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // 重新绑定快捷按钮事件
+    // 绑定快捷按钮事件
     const quickButtons = document.querySelectorAll('.quick-action-btn');
     quickButtons.forEach(button => {
         button.addEventListener('click', function() {
-            console.log('点击快捷按钮:', this.textContent.trim());
             const action = this.textContent.trim();
             const currentStep = parseInt(this.closest('.tab-pane').id.replace('step', ''));
             const textArea = document.getElementById(currentStep === 2 ? 'backgroundText' : 'outlineText');
@@ -325,13 +323,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const currentContent = textArea.value;
                 switch(action) {
                     case '调整情节发展':
-                        textArea.value = currentContent + '\n\n[调整后的情节发展...]\n';
+                        textArea.value = currentContent + '\n\n[调整后的情节发展...]';
                         break;
                     case '增加故事转折':
-                        textArea.value = currentContent + '\n\n[新增的故事转折...]\n';
+                        textArea.value = currentContent + '\n\n[新增的故事转折...]';
                         break;
                     case '优化结局设计':
-                        textArea.value = currentContent + '\n\n[优化后的结局...]\n';
+                        textArea.value = currentContent + '\n\n[优化后的结局...]';
                         break;
                 }
                 saveCurrentState();
@@ -392,7 +390,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // 重新绑定编辑按钮
+    // 绑定编辑按钮
     const editButtons = document.querySelectorAll('.edit-btn');
     editButtons.forEach(button => {
         button.addEventListener('click', function() {
@@ -405,45 +403,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!textArea.disabled) {
                     textArea.focus();
                 }
-                console.log(`${currentStep === 2 ? '背景' : '大纲'}文本框编辑状态: ${!textArea.disabled}`);
             }
         });
     });
-    
-    // 绑定API Key验证按钮点击事件
-    const apiKeyConfirmBtn = document.querySelector('.api-key-confirm');
-    if (apiKeyConfirmBtn) {
-        apiKeyConfirmBtn.addEventListener('click', function() {
-            console.log('点击API Key确认按钮');
-            const apiKeyInput = document.querySelector('input[type="password"]');
-            if (apiKeyInput) {
-                const apiKey = apiKeyInput.value.trim();
-                if (apiKey) {
-                    // 保存API Key
-                    appState.setApiKey(apiKey);
-                    
-                    // 禁用输入框和按钮
-                    apiKeyInput.disabled = true;
-                    this.disabled = true;
-                    
-                    // 显示成功提示
-                    const successTip = document.createElement('div');
-                    successTip.className = 'alert alert-success mt-2';
-                    successTip.innerHTML = '<strong>✓ API Key已保存！</strong>';
-                    apiKeyInput.parentNode.appendChild(successTip);
-                    
-                    // 3秒后自动进入下一步
-                    setTimeout(() => {
-                        const currentStep = progressManager.currentStep;
-                        nextStep(currentStep);
-                    }, 1500);
-                } else {
-                    alert('请输入API Key');
-                }
-            }
-        });
-        console.log('API Key确认按钮事件已绑定');
-    }
 });
 
 // 步骤切换函数
@@ -773,211 +735,212 @@ function generateGeneralBackground() {
 
 // 生成小说大纲
 function generateOutline() {
-    console.log('开始生成小说大纲');
+    const title = document.getElementById('novelTitle').value;
+    const genre = document.getElementById('novelGenre').value;
+    const backgroundText = document.getElementById('backgroundText').value;
     const outlineText = document.getElementById('outlineText');
     const regenerateBtn = document.querySelector('#step3 .regenerate-btn');
     
-    if (outlineText && regenerateBtn) {
-        // 禁用重新生成按钮
+    // 禁用重新生成按钮
+    if (regenerateBtn) {
         regenerateBtn.disabled = true;
-        regenerateBtn.innerHTML = '生成中...';
-        
-        // 禁用文本框编辑
-        outlineText.disabled = true;
+        regenerateBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 生成中...';
+    }
+    
+    // 显示初始状态
+    if (outlineText) {
+        outlineText.value = '系统正在构思大纲，请稍候...';
         outlineText.style.opacity = '0.7';
-        outlineText.value = '正在生成小说大纲，请稍候...';
-        
-        // 显示加载状态
-        showLoading('正在生成小说大纲...');
-        
-        // 获取小说类型和背景
-        const genre = document.getElementById('novelGenre').value;
-        const background = document.getElementById('backgroundText').value;
-        
-        // 根据类型生成不同的大纲模板
-        let outlineTemplate = '';
-        if (genre === '都市生活') {
-            outlineTemplate = `第一章：都市新人
-1. 主角李好初入职场，展现出色的业务能力
-2. 与同事和上级的初步互动，建立人际关系
-3. 发现公司内部存在的一些问题
+        outlineText.disabled = true;
+    }
+    
+    // 显示加载状态
+    showLoading('正在生成小说大纲...');
+    
+    // 根据不同类型生成不同的大纲模板
+    let outlineTemplate = '';
+    switch(genre) {
+        case '都市生活':
+            outlineTemplate = `《${title}》小说大纲
 
-第二章：职场挑战
-1. 接手一个重要项目
-2. 遭遇项目合作方的刁难
-3. 通过智慧和努力解决困境
+第一章：初入职场
+- 李好入职互联网公司，初次见到陈远
+- 接手重要项目，与张明产生第一次冲突
+- 王小美给出建议，帮助李好度过难关
 
-第三章：感情纠葛
-1. 与青梅竹马重逢
-2. 工作中结识新的异性朋友
-3. 感情与事业的平衡
+第二章：项目危机
+- 项目进展不顺，面临deadline压力
+- 陈远伸出援手，两人共同加班
+- 张明从中作梗，项目陷入困境
 
-第四章：事业转折
-1. 公司内部重组
-2. 面临升职机会
-3. 竞争对手的明争暗斗
+第三章：转机与情愫
+- 李好灵光一现，找到项目突破口
+- 陈远对李好刮目相看，暗生情愫
+- 张明嫉妒，开始暗中使绊子
 
-第五章：危机与机遇
-1. 项目出现重大危机
-2. 团队分裂与重组
-3. 寻找解决方案的过程
+第四章：创业契机
+- 陈远提出创业计划，邀请李好加入
+- 王小美支持李好放手一搏
+- 张明得知后，散布不利谣言
 
-第六章：逆境翻盘
-1. 找到项目漏洞的关键
-2. 成功化解危机
-3. 得到公司高层认可
+第五章：感情抉择
+- 李好在事业与感情间徘徊
+- 陈远表明心意，但时机不恰当
+- 王小美从旁调解，点醒李好
 
-第七章：情感抉择
-1. 理清感情脉络
-2. 做出人生选择
-3. 获得成长与领悟
+第六章：危机与转机
+- 创业遭遇资金链危机
+- 张明趁机挖角核心团队
+- 李好临危不乱，展现领导才能
 
-第八章：成功蜕变
-1. 事业取得重大突破
-2. 个人成长总结
-3. 展望美好未来
+第七章：柳暗花明
+- 项目获得重要投资
+- 陈远与李好关系更进一步
+- 张明阴谋败露，遭到惩罚
+
+第八章：成功在望
+- 公司走上正轨，团队凝聚力增强
+- 李好与陈远终成眷属
+- 王小美见证好友的成长与幸福
 
 尾声：
-主角在经历职场与感情的双重考验后，最终实现了自我价值，找到了真爱，完成了从职场新人到独当一面的蜕变。`;
-        } else if (genre === '玄幻修仙') {
-            outlineTemplate = `第一卷：凡尘起步
-第一章：灵根觉醒
-1. 主角发现自身特殊灵根
-2. 拜入仙门
-3. 初识修仙界规则
+- 一年后的公司年会
+- 李好回顾创业历程的得失
+- 对未来的展望与期待`;
+            break;
+        case '玄幻修仙':
+            outlineTemplate = `《${title}》小说大纲
+
+第一卷：灵根觉醒
+第一章：平凡少年
+- 叶天发现自己拥有超强灵根
+- 被云霄真人收为关门弟子
+- 初入青云门，结识同门师兄弟
 
 第二章：修炼之路
-1. 学习基础功法
-2. 结识同门师兄弟
-3. 展现修炼天赋
-
-第三章：首次历练
-1. 参与门派任务
-2. 遭遇危险
-3. 获得机缘
+- 习得基础功法，展现超强悟性
+- 与司马云首次较量，不分胜负
+- 救助受伤的林月，结下善缘
 
 第二卷：宗门风云
-第四章：宗门大比
-1. 参加内门选拔
-2. 展示实力
-3. 获得重要传承
+第三章：宗门大比
+- 参加青云门内门弟子选拔
+- 施展独特功法，技惊四座
+- 获得重要传承机缘
 
-第五章：仙缘际会
-1. 获得上古秘籍
-2. 突破修为瓶颈
-3. 结识重要人物
+第四章：危机四伏
+- 发现宗门内有奸细
+- 林月遭遇暗算，叶天相救
+- 司马云暗中相助，化解危机
 
-第三卷：天地大劫
-第六章：劫难降临
-1. 发现惊天阴谋
-2. 宗门遭遇危机
-3. 奋起抗敌
+第三卷：世家争锋
+第五章：世家较量
+- 四大世家会武开始
+- 叶天代表青云门出战
+- 与司马云再次对决，平分秋色
 
-第七章：逆天改命
-1. 突破修为境界
-2. 力挽狂澜
-3. 拯救宗门
+第六章：身世之谜
+- 神秘高手现身，点破叶天身世
+- 身具上古血脉，引发各方觊觎
+- 林月相助，躲过追杀
 
-第八章：飞升在望
-1. 飞升之路显现
-2. 完成最后突破
-3. 实现终极目标
+第四卷：正邪之战
+第七章：邪道入侵
+- 幽冥教掀起滔天血浪
+- 叶天临危受命，率队迎敌
+- 发现幽冥教与身世有关
 
-第九章：道法自然
-1. 悟道成真
-2. 羽化登仙
-3. 位列仙班
+第八章：真相大白
+- 身世之谜水落石出
+- 与幽冥教决战，重创敌首
+- 司马云相助，共同守护正道
 
-终章：
-主角历经重重磨难，最终悟得真道，完成了从凡人到仙人的蜕变，实现了最终的飞升梦想。`;
-        } else {
-            outlineTemplate = `第一章：开篇
-1. 背景介绍
-2. 主要人物登场
-3. 初始矛盾埋下
+第五卷：飞升之路
+第九章：突破桎梏
+- 突破灵境，踏入仙境
+- 与林月情定三生
+- 携手共踏长生路
 
-第二章：矛盾展开
-1. 冲突加剧
-2. 人物关系发展
-3. 故事线索延伸
+终章：道法自然
+- 飞升在即，处理世俗牵绊
+- 与挚爱道侣共赴仙途
+- 展望无尽的修真大道`;
+            break;
+        default:
+            outlineTemplate = `《${title}》小说大纲
 
-第三章：高潮迭起
-1. 关键事件发生
-2. 人物性格显现
-3. 矛盾升级
+第一章：引子
+- [开篇情节]
+- [主要人物登场]
+- [初始矛盾埋伏]
 
-第四章：危机显现
-1. 重大转折
-2. 人物抉择
-3. 局势变化
+第二章：矛盾起
+- [主要冲突展开]
+- [人物关系发展]
+- [情节推进要点]
+
+第三章：波折
+- [第一个转折点]
+- [矛盾升级]
+- [人物成长]
+
+第四章：高潮
+- [主要冲突爆发]
+- [关键抉择]
+- [重要转折]
 
 第五章：结局
-1. 矛盾解决
-2. 人物成长
-3. 故事升华
+- [矛盾解决]
+- [人物结局]
+- [主题升华]
 
-尾声：
-总结故事主题，展现人物最终命运。`;
-        }
-        
-        // 模拟生成过程
-        setTimeout(() => {
-            if (outlineText) {
-                // 生成完成后的效果
-                outlineText.style.opacity = '1';
-                outlineText.disabled = true; // 默认不可编辑
-                outlineText.value = outlineTemplate;
-                
-                // 移除旧的提示
-                const oldTip = document.querySelector('#step3 .alert-info');
-                if (oldTip) {
-                    oldTip.remove();
-                }
-                
-                // 添加编辑提示
-                const editTip = document.createElement('div');
-                editTip.className = 'alert alert-info mt-2';
-                editTip.innerHTML = `
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>✓ 小说大纲已生成完成！</strong><br>
-                            <small>您可以：</small>
-                            <ul class="mb-0">
-                                <li>点击"编辑内容"开始修改</li>
-                                <li>点击"重新生成"尝试新的版本</li>
-                                <li>点击"保存内容"保存当前版本</li>
-                            </ul>
-                        </div>
-                    </div>
-                `;
-                outlineText.parentNode.appendChild(editTip);
-                
-                // 恢复重新生成按钮
-                if (regenerateBtn) {
-                    regenerateBtn.disabled = false;
-                    regenerateBtn.innerHTML = '重新生成';
-                }
-            }
-            hideLoading();
-        }, 12000);
+[根据具体类型补充更多章节内容...]`;
     }
+    
+    // 模拟生成过程
+    setTimeout(() => {
+        if (outlineText) {
+            // 生成完成后的效果
+            outlineText.style.opacity = '1';
+            outlineText.disabled = false;
+            outlineText.value = outlineTemplate;
+            
+            // 移除旧的提示
+            const oldTip = document.querySelector('#step3 .alert-info');
+            if (oldTip) {
+                oldTip.remove();
+            }
+            
+            // 添加编辑提示
+            const editTip = document.createElement('div');
+            editTip.className = 'alert alert-info mt-2';
+            editTip.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>✓ 小说大纲已生成完成！</strong><br>
+                        <small>您可以：</small>
+                        <ul class="mb-0">
+                            <li>直接编辑上方文本框修改内容</li>
+                            <li>点击"重新生成"尝试新的版本</li>
+                            <li>点击"保存内容"保存当前版本</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+            outlineText.parentNode.appendChild(editTip);
+            
+            // 恢复重新生成按钮
+            if (regenerateBtn) {
+                regenerateBtn.disabled = false;
+                regenerateBtn.innerHTML = '重新生成';
+            }
+        }
+        hideLoading();
+    }, 12000);
 }
 
-// 添加防抖函数
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-// 使用防抖优化的保存状态函数
-const debouncedSaveState = debounce(function() {
+// 保存当前状态到 localStorage
+function saveCurrentState() {
     const state = {
         currentStep: progressManager.currentStep,
         novelTitle: document.getElementById('novelTitle')?.value || '',
@@ -988,27 +951,10 @@ const debouncedSaveState = debounce(function() {
     };
     localStorage.setItem('novelGeneratorState', JSON.stringify(state));
     console.log('状态已保存:', state);
-}, 1000); // 1秒后执行保存
+}
 
-// 修改事件监听，使用防抖的保存函数
-document.addEventListener('input', function(e) {
-    if (['novelTitle', 'novelGenre', 'backgroundText', 'outlineText'].includes(e.target.id)) {
-        debouncedSaveState();
-    }
-});
-
-// 修改状态恢复函数，确保在DOM完全加载后执行
+// 从 localStorage 恢复状态
 function restoreState() {
-    // 确保DOM已经完全加载
-    if (!document.getElementById('novelTitle') || 
-        !document.getElementById('novelGenre') || 
-        !document.getElementById('backgroundText') || 
-        !document.getElementById('outlineText')) {
-        console.log('DOM元素未完全加载，延迟恢复状态');
-        setTimeout(restoreState, 100);
-        return;
-    }
-
     const savedState = localStorage.getItem('novelGeneratorState');
     if (savedState) {
         const state = JSON.parse(savedState);
@@ -1027,19 +973,13 @@ function restoreState() {
         // 恢复背景内容
         if (state.backgroundText) {
             const backgroundText = document.getElementById('backgroundText');
-            if (backgroundText) {
-                backgroundText.value = state.backgroundText;
-                backgroundText.disabled = true; // 确保文本框默认是禁用的
-            }
+            if (backgroundText) backgroundText.value = state.backgroundText;
         }
         
         // 恢复大纲内容
         if (state.outlineText) {
             const outlineText = document.getElementById('outlineText');
-            if (outlineText) {
-                outlineText.value = state.outlineText;
-                outlineText.disabled = true; // 确保文本框默认是禁用的
-            }
+            if (outlineText) outlineText.value = state.outlineText;
         }
         
         // 恢复到正确的步骤
@@ -1071,6 +1011,13 @@ function restoreState() {
         }
     }
 }
+
+// 在内容变化时保存状态
+document.addEventListener('input', function(e) {
+    if (['novelTitle', 'novelGenre', 'backgroundText', 'outlineText'].includes(e.target.id)) {
+        saveCurrentState();
+    }
+});
 
 // 导出Word文档
 function exportToWord(content, filename) {
